@@ -1,0 +1,207 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:lively_nightlife_nightclub_party/core/common/widgets/text_property.dart';
+import 'package:lively_nightlife_nightclub_party/core/utils/constants/colors.dart';
+import '../controller/club_profile_controller.dart';
+
+class ClubPrivacySettingsView extends GetView<ClubProfileController> {
+  const ClubPrivacySettingsView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Faded Top Blue Background Highlight
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 220.h,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFDCE9FE).withValues(alpha: 0.6),
+                    Colors.white,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header (Back + Title)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Get.back(),
+                        child: Icon(
+                          Icons.arrow_back_ios_new,
+                          size: 22.sp,
+                          color: AppColors.blackColor,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      TextProperty(
+                        text: 'Privacy & Safety',
+                        textColor: AppColors.blackColor,
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Sora',
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 10.h),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(color: const Color(0xFFF1F5F9), width: 1.w),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.02),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              // FAQ
+                              _buildLinkTile(
+                                title: 'FAQ',
+                                subtitle: 'Frequently asked questions',
+                                onTap: () {
+                                  Get.snackbar('FAQ', 'FAQ page coming soon!');
+                                },
+                              ),
+                              _buildDivider(),
+                              // Contact Support
+                              _buildLinkTile(
+                                title: 'Contact Support',
+                                subtitle: 'Chat with our team 24/7',
+                                onTap: () {
+                                  Get.snackbar('Contact Support', 'Support chat coming soon!');
+                                },
+                              ),
+                              _buildDivider(),
+                              // Report a Bug
+                              _buildLinkTile(
+                                title: 'Report a Bug',
+                                subtitle: 'Help us improve the app',
+                                onTap: () {
+                                  Get.snackbar('Report a Bug', 'Bug reporting form coming soon!');
+                                },
+                              ),
+                              _buildDivider(),
+                              // Community Guidelines
+                              _buildLinkTile(
+                                title: 'Community Guidelines',
+                                subtitle: 'Our rules and standards',
+                                onTap: () {
+                                  Get.snackbar('Community Guidelines', 'Community guidelines coming soon!');
+                                },
+                              ),
+                              _buildDivider(),
+                              // Terms of Service
+                              _buildLinkTile(
+                                title: 'Terms of Service',
+                                subtitle: 'Legal agreements',
+                                onTap: () {
+                                  Get.snackbar('Terms of Service', 'Terms of service details coming soon!');
+                                },
+                              ),
+                              _buildDivider(),
+                              // Privacy Policy
+                              _buildLinkTile(
+                                title: 'Privacy Policy',
+                                subtitle: 'How we handle your data',
+                                onTap: () {
+                                  Get.snackbar('Privacy Policy', 'Privacy policy details coming soon!');
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLinkTile({
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20.r),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextProperty(
+                    text: title,
+                    textColor: AppColors.blackColor,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  SizedBox(height: 4.h),
+                  TextProperty(
+                    text: subtitle,
+                    textColor: AppColors.lightGreyColor,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.lightGreyColor,
+              size: 20.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      height: 1.h,
+      thickness: 1.h,
+      color: const Color(0xFFF8FAFC),
+      indent: 16.w,
+      endIndent: 16.w,
+    );
+  }
+}
