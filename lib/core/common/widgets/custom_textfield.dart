@@ -75,12 +75,17 @@ class CustomTextfield extends StatelessWidget {
           prefixIcon: prefixIcon != null
               ? Padding(
                   padding: EdgeInsets.only(left: 12.w, right: 8.w),
-                  child: SvgPicture.asset(
-                    prefixIcon!,
-                    height: 18.h,
-                    width: 18.w,
-                    // fit: BoxFit.contain,
-                  ),
+                  child: prefixIcon!.toLowerCase().endsWith('.png')
+                      ? Image.asset(
+                          prefixIcon!,
+                          height: 18.h,
+                          width: 18.w,
+                        )
+                      : SvgPicture.asset(
+                          prefixIcon!,
+                          height: 18.h,
+                          width: 18.w,
+                        ),
                 )
               : null,
 

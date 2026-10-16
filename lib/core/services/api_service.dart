@@ -26,6 +26,7 @@ class ApiService {
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     CancelToken? cancelToken,
     bool requireAuth = true,
   }) async {
@@ -34,6 +35,7 @@ class ApiService {
         path,
         data: data,
         queryParameters: queryParameters,
+        options: options,
         cancelToken: cancelToken,
       );
     } catch (error) {

@@ -1,5 +1,6 @@
+import 'package:dio/dio.dart' show FormData;
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide FormData;
 import 'package:get_storage/get_storage.dart';
 import 'package:lively_nightlife_nightclub_party/core/services/api_endpoints.dart';
 import 'package:lively_nightlife_nightclub_party/core/services/api_service.dart';
@@ -223,19 +224,32 @@ class AuthController extends GetxController {
       firstName = firstNameController.text.trim();
       lastName = lastNameController.text.trim();
 
+      if (firstName.isEmpty) {
+        Get.snackbar('Validation Error', 'Please enter your first name');
+        return;
+      }
+
       final rawDob = dobController.text.trim();
-      if (rawDob.isNotEmpty) {
-        final parts = rawDob.split('/');
-        if (parts.length == 3) {
-          // Convert DD/MM/YYYY to YYYY-MM-DD
-          dob = '${parts[2]}-${parts[1]}-${parts[0]}';
-        } else {
-          dob = rawDob;
-        }
+      if (rawDob.isEmpty) {
+        Get.snackbar('Validation Error', 'Please select your date of birth');
+        return;
+      }
+
+      final parts = rawDob.split('/');
+      if (parts.length == 3) {
+        // Convert DD/MM/YYYY to YYYY-MM-DD
+        dob = '${parts[2]}-${parts[1]}-${parts[0]}';
+      } else {
+        dob = rawDob;
       }
     } else {
       firstName = clubNameController.text.trim();
       lastName = '';
+
+      if (firstName.isEmpty) {
+        Get.snackbar('Validation Error', 'Please enter your club name');
+        return;
+      }
     }
 
     final Map<String, dynamic> requestBody = {
@@ -254,9 +268,11 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
 
-      final response = await _apiService.post(
+      final formData = FormData.fromMap(requestBody);
+
+      final response = await _apiService.upload(
         ApiEndpoints.register,
-        data: requestBody,
+        formData: formData,
         requireAuth: false,
       );
 
@@ -277,6 +293,7 @@ class AuthController extends GetxController {
         );
       }
     } catch (e) {
+      debugPrint('Registration Error: $e');
       Get.snackbar(
         'Registration Failed',
         e.toString(),
@@ -304,19 +321,19 @@ class AuthController extends GetxController {
 
   @override
   void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
+    emailController.clear();
+    passwordController.clear();
 
-    firstNameController.dispose();
-    lastNameController.dispose();
-    dobController.dispose();
+    firstNameController.clear();
+    lastNameController.clear();
+    dobController.clear();
 
-    clubNameController.dispose();
-    phoneController.dispose();
+    clubNameController.clear();
+    phoneController.clear();
 
-    signupEmailController.dispose();
-    signupPasswordController.dispose();
-    confirmPasswordController.dispose();
+    signupEmailController.clear();
+    signupPasswordController.clear();
+    confirmPasswordController.clear();
 
     super.onClose();
   }

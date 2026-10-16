@@ -79,8 +79,11 @@ class OtpView extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                   contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                  handleControllers: (controllers) {
+                    flowController.otpControllers = controllers;
+                  },
                   onCodeChanged: (String code) {
-                    flowController.otpCode = code.trim();
+                    flowController.otpCode = flowController.currentOtp;
                     if (flowController.hasError.value) {
                       flowController.hasError.value = false;
                       flowController.errorMessage.value = '';

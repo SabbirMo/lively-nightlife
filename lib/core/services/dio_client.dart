@@ -37,7 +37,7 @@ class DioClient {
             requestBody: true,
             responseHeader: false,
             responseBody: true,
-            error: false,
+            error: true,
           ),
         );
       }
@@ -69,7 +69,7 @@ class DioClient {
             requestBody: true,
             responseHeader: false,
             responseBody: true,
-            error: false,
+            error: true,
           ),
         );
       }

@@ -4,6 +4,6 @@ import 'package:lively_nightlife_nightclub_party/features/auth_view/controller/a
 class AuthBindings extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<AuthController>(() => AuthController());
+    Get.lazyPut<AuthController>(() => AuthController(), fenix: true);
   }
 }

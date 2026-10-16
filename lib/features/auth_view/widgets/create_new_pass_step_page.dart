@@ -8,6 +8,7 @@ import 'package:lively_nightlife_nightclub_party/core/common/widgets/text_proper
 import 'package:lively_nightlife_nightclub_party/core/utils/constants/colors.dart';
 import 'package:lively_nightlife_nightclub_party/core/utils/constants/icon_path.dart';
 import 'package:lively_nightlife_nightclub_party/features/auth_view/controller/password_controller.dart';
+import 'package:lively_nightlife_nightclub_party/features/auth_view/controller/reset_password_flow_controller.dart';
 import 'package:lively_nightlife_nightclub_party/routes/app_routes.dart';
 
 class CreateNewPassStepPage extends StatelessWidget {
@@ -42,51 +43,32 @@ class CreateNewPassStepPage extends StatelessWidget {
             fontWeight: FontWeight.w400,
           ),
           SizedBox(height: 32.h),
-          // Align(
-          //   alignment: Alignment.centerLeft,
-          //   child: TextProperty(
-          //     text: 'New Password',
-          //     textColor: AppColors.whiteColor,
-          //     fontSize: 16.sp,
-          //     fontWeight: FontWeight.w400,
-          //   ),
-          // ),
-          // SizedBox(height: 8.h),
           CustomTextfield(
-            // borderColor: AppColors.defaultBorderColor,
             borderRadius: 12.r,
             isPassword: true,
-            prefixIcon: IconPath.lockIcon,
+            prefixIcon: IconPath.lock,
             fieldText: 'New password',
             onChanged: passwordController.onPasswordChanged,
           ),
           SizedBox(height: 32.h),
-          // Align(
-          //   alignment: Alignment.centerLeft,
-          //   child: TextProperty(
-          //     text: 'Confirm New Password',
-          //     textColor: AppColors.whiteColor,
-          //     fontSize: 16.sp,
-          //     fontWeight: FontWeight.w400,
-          //   ),
-          // ),
-          // SizedBox(height: 8.h),
           CustomTextfield(
-            // borderColor: AppColors.defaultBorderColor,
             borderRadius: 12.r,
             isPassword: true,
-            prefixIcon: IconPath.lockIcon,
+            prefixIcon: IconPath.lock,
             fieldText: 'Confirm new password',
             onChanged: passwordController.onConfirmPasswordChanged,
           ),
           SizedBox(height: 32.h),
-          CustomButton(
-            isShadowNeed: false,
-            text: 'Reset Password',
-            // icon: Icons.arrow_forward,
-            iconSize: 20.w,
-            onTap: onFinish,
-          ),
+          Obx(() {
+            final flowController = Get.find<ResetPasswordFlowController>();
+            return CustomButton(
+              isShadowNeed: false,
+              isLoading: flowController.isLoading.value,
+              text: 'Reset Password',
+              iconSize: 20.w,
+              onTap: onFinish,
+            );
+          }),
           SizedBox(height: 16.h),
           Center(
             child: RichText(

@@ -89,6 +89,12 @@ class ApiErrorHandler {
               'Unexpected network error occurred: ${error.message ?? 'Unknown error'}',
           statusCode: error.response?.statusCode,
         );
+
+      default:
+        return ApiException(
+          message: error.message ?? 'An unexpected network error occurred.',
+          statusCode: error.response?.statusCode,
+        );
     }
   }
 
@@ -100,20 +106,20 @@ class ApiErrorHandler {
 
     if (data != null) {
       if (data is Map<String, dynamic>) {
-        if (data.containsKey('message') && data['message'] != null) {
-          errorMessage = data['message'].toString();
-        } else if (data.containsKey('detail') && data['detail'] != null) {
-          errorMessage = data['detail'].toString();
-        } else if (data.containsKey('error') && data['error'] != null) {
-          final err = data['error'];
-          errorMessage = err is Map ? _extractFirstError(err) : err.toString();
-        } else if (data.containsKey('errors') && data['errors'] != null) {
+        if (data.containsKey('errors') && data['errors'] != null) {
           final errs = data['errors'];
           if (errs is Map) {
             errorMessage = _extractFirstError(errs);
           } else if (errs is List && errs.isNotEmpty) {
             errorMessage = errs.first.toString();
           }
+        } else if (data.containsKey('error') && data['error'] != null) {
+          final err = data['error'];
+          errorMessage = err is Map ? _extractFirstError(err) : err.toString();
+        } else if (data.containsKey('detail') && data['detail'] != null) {
+          errorMessage = data['detail'].toString();
+        } else if (data.containsKey('message') && data['message'] != null) {
+          errorMessage = data['message'].toString();
         } else {
           // Check for validation errors format e.g. {"field": ["error message"]}
           final extracted = _extractFirstError(data);
