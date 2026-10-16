@@ -50,6 +50,8 @@ import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile
 import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/view/user_notifications_settings_view.dart';
 import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/view/user_account_settings_view.dart';
 import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/view/user_privacy_settings_view.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/bindings/edit_profile_binding.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/view/edit_profile_view.dart';
 
 class AppRoute {
   static const String splashView = '/splashView';
@@ -86,6 +88,7 @@ class AppRoute {
       '/userNotificationsSettingsView';
   static const String userAccountSettingsView = '/userAccountSettingsView';
   static const String userPrivacySettingsView = '/userPrivacySettingsView';
+  static const String editProfileView = '/editProfileView';
 
   static String getSplashView() => splashView;
   static String getOnboardingView() => onboardingView;
@@ -120,6 +123,7 @@ class AppRoute {
       userNotificationsSettingsView;
   static String getUserAccountSettingsView() => userAccountSettingsView;
   static String getUserPrivacySettingsView() => userPrivacySettingsView;
+  static String getEditProfileView() => editProfileView;
 
   static List<GetPage> routes = [
     GetPage(
@@ -276,6 +280,11 @@ class AppRoute {
       name: userPrivacySettingsView,
       page: () => const UserPrivacySettingsView(),
       binding: UserProfileSettingBinding(),
+    ),
+    GetPage(
+      name: editProfileView,
+      page: () => const EditProfileView(),
+      binding: EditProfileBinding(),
     ),
   ];
 }

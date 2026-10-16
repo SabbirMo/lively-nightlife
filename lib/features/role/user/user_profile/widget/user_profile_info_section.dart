@@ -14,56 +14,60 @@ class UserProfileInfoSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<UserProfileController>();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextProperty(
-          text: 'Alex Rivera',
-          textColor: AppColors.blackColor,
-          fontSize: 20.sp,
-          fontWeight: FontWeight.bold,
-        ),
-        SizedBox(height: 2.h),
-        TextProperty(
-          text: '@alex_nights',
-          textColor: AppColors.lightGreyColor,
-          fontSize: 13.sp,
-          fontWeight: FontWeight.w400,
-        ),
-        SizedBox(height: 12.h),
-        TextProperty(
-          text: '🎉 Nightlife enthusiast | Club hopper | EDM lover',
-          textColor: AppColors.secondBlackColor,
-          fontSize: 13.sp,
-          fontWeight: FontWeight.w400,
-        ),
-        SizedBox(height: 4.h),
-        TextProperty(
-          text: '📍 Los Angeles, CA | Party every weekend',
-          textColor: AppColors.secondBlackColor,
-          fontSize: 13.sp,
-          fontWeight: FontWeight.w400,
-        ),
-        SizedBox(height: 12.h),
-        Row(
-          children: [
-            Icon(
-              Icons.location_on_outlined,
-              color: AppColors.lightGreyColor,
-              size: 16.sp,
-            ),
-            SizedBox(width: 4.w),
+    return Obx(() {
+      final name = controller.name;
+      final username = controller.username;
+      final bio = controller.bio;
+      final location = controller.locationName;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextProperty(
+            text: name.isNotEmpty ? name : 'User',
+            textColor: AppColors.blackColor,
+            fontSize: 20.sp,
+            fontWeight: FontWeight.bold,
+          ),
+          if (username.isNotEmpty) ...[
+            SizedBox(height: 2.h),
             TextProperty(
-              text: 'Los Angeles, CA',
+              text: username,
               textColor: AppColors.lightGreyColor,
               fontSize: 13.sp,
               fontWeight: FontWeight.w400,
             ),
           ],
-        ),
-        SizedBox(height: 24.h),
-        Obx(() {
-          return Row(
+          if (bio.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            TextProperty(
+              text: bio,
+              textColor: AppColors.secondBlackColor,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w400,
+            ),
+          ],
+          if (location.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on_outlined,
+                  color: AppColors.lightGreyColor,
+                  size: 16.sp,
+                ),
+                SizedBox(width: 4.w),
+                TextProperty(
+                  text: location,
+                  textColor: AppColors.lightGreyColor,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w400,
+                ),
+              ],
+            ),
+          ],
+          SizedBox(height: 24.h),
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
@@ -104,9 +108,9 @@ class UserProfileInfoSection extends StatelessWidget {
                 ),
               ),
             ],
-          );
-        }),
-      ],
-    );
+          ),
+        ],
+      );
+    });
   }
 }

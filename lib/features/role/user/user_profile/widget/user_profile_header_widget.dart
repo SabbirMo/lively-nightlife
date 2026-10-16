@@ -7,12 +7,15 @@ import 'package:lively_nightlife_nightclub_party/core/common/widgets/text_proper
 import 'package:lively_nightlife_nightclub_party/core/utils/constants/colors.dart';
 import 'package:lively_nightlife_nightclub_party/core/utils/constants/icon_path.dart';
 import 'package:lively_nightlife_nightclub_party/routes/app_routes.dart';
+import '../controller/user_profile_controller.dart';
 
 class UserProfileHeaderWidget extends StatelessWidget {
   const UserProfileHeaderWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<UserProfileController>();
+
     return SizedBox(
       height: 272.h,
       child: Stack(
@@ -23,10 +26,23 @@ class UserProfileHeaderWidget extends StatelessWidget {
             left: 0,
             right: 0,
             height: 240.h,
-            child: Image.network(
-              'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7',
-              fit: BoxFit.cover,
-            ),
+            child: Obx(() {
+              final coverUrl = controller.coverImageUrl;
+              if (coverUrl.isNotEmpty) {
+                return Image.network(
+                  coverUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Image.network(
+                    'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7',
+                    fit: BoxFit.cover,
+                  ),
+                );
+              }
+              return Image.network(
+                'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7',
+                fit: BoxFit.cover,
+              );
+            }),
           ),
           Positioned(
             top: 0,
@@ -127,12 +143,31 @@ class UserProfileHeaderWidget extends StatelessWidget {
                         color: AppColors.mildColor,
                         shape: BoxShape.circle,
                       ),
-                      child: CircleAvatar(
-                        radius: 36.r,
-                        backgroundImage: const NetworkImage(
-                          'https://i.pravatar.cc/150?img=10',
-                        ),
-                      ),
+                      child: Obx(() {
+                        final profileUrl = controller.profileImageUrl;
+                        if (profileUrl.isNotEmpty) {
+                          return CircleAvatar(
+                            radius: 36.r,
+                            backgroundColor: AppColors.lightGreyColor.withValues(alpha: 0.2),
+                            backgroundImage: NetworkImage(profileUrl),
+                          );
+                        }
+                        final initial = controller.name.isNotEmpty
+                            ? controller.name[0].toUpperCase()
+                            : 'U';
+                        return CircleAvatar(
+                          radius: 36.r,
+                          backgroundColor: AppColors.blueColor,
+                          child: Text(
+                            initial,
+                            style: TextStyle(
+                              color: AppColors.whiteColor,
+                              fontSize: 24.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      }),
                     ),
                     Positioned(
                       right: 2.w,
@@ -163,8 +198,9 @@ class UserProfileHeaderWidget extends StatelessWidget {
                   iconColor: AppColors.blueColor,
                   buttonWidth: 90.w,
                   padding: EdgeInsets.symmetric(vertical: 8.h),
-                  onTap: () {
-                    Get.snackbar('Edit Profile', 'Edit profile coming soon!');
+                  onTap: () async {
+                    await Get.toNamed(AppRoute.editProfileView);
+                    controller.fetchUserProfile();
                   },
                 ),
                 SizedBox(width: 8.w),

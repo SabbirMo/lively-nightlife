@@ -149,6 +149,8 @@ class OtpController extends GetxController {
         final bool isVenue =
             activeProfile == 'venue' || role == 'club' || role == 'venue';
 
+        await TokenStorageService.saveActiveProfile(isVenue ? 'venue' : 'user');
+
         if (isVenue) {
           Get.offAllNamed(AppRoute.clubBottomNavbarView);
         } else {

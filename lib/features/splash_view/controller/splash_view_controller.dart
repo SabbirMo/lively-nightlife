@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lively_nightlife_nightclub_party/core/services/token_storage_service.dart';
 import 'package:lively_nightlife_nightclub_party/routes/app_routes.dart';
 
 class SplashController extends GetxController
@@ -87,18 +88,17 @@ class SplashController extends GetxController
       return;
     }
 
-    Get.toNamed(AppRoute.onboardingView);
-
-    // final GetStorage storage = GetStorage();
-    // final bool isLoggedIn = storage.read<bool>('is_logged_in') ?? false;
-    // final authService = Get.find<AuthService>();
-    // if (isLoggedIn && authService.hasCompletedOnboarding()) {
-    //   Get.offAllNamed(AppRoute.bottomNavigationBarView);
-    // } else if (isLoggedIn) {
-    //   Get.offAllNamed(AppRoute.onboardingView);
-    // } else {
-    //   Get.offAllNamed(AppRoute.getStartedView);
-    // }
+    if (TokenStorageService.hasToken()) {
+      final activeProfile = TokenStorageService.getActiveProfile();
+      final bool isVenue = activeProfile == 'venue' || activeProfile == 'club';
+      if (isVenue) {
+        Get.offAllNamed(AppRoute.clubBottomNavbarView);
+      } else {
+        Get.offAllNamed(AppRoute.userBottomNavigationBarView);
+      }
+    } else {
+      Get.offAllNamed(AppRoute.onboardingView);
+    }
   }
 
   @override

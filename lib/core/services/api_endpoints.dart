@@ -11,4 +11,5 @@ class ApiEndpoints {
   static const String forgotPassword = '/api/users/password/forgot/';
   static const String passwordVerifyOtp = '/api/users/password/verify-otp/';
   static const String resetPassword = '/api/users/password/reset/';
+  static const String userProfile = '/api/users/profile/';
 }

@@ -157,7 +157,10 @@ class AuthController extends GetxController {
 
         final bool isVenue =
             activeProfile == 'venue' ||
+            activeProfile == 'club' ||
             (activeProfile == null && selectedRole.value == AuthRole.club);
+
+        await TokenStorageService.saveActiveProfile(isVenue ? 'venue' : 'user');
 
         if (isVenue) {
           selectedRole.value = AuthRole.club;

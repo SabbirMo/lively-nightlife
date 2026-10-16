@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lively_nightlife_nightclub_party/core/utils/constants/image_path.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:lively_nightlife_nightclub_party/core/services/api_endpoints.dart';
+import 'package:lively_nightlife_nightclub_party/core/services/api_service.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/model/user_profile_model.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/controller/user_profile_setting_controller.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile/controller/user_profile_controller.dart';
 import '../model/comment_model.dart';
 import '../model/feed_post_model.dart';
 
 class UserHomeController extends GetxController {
+  final ApiService _apiService = ApiService();
+  final Rx<UserProfileModel?> userProfile = Rx<UserProfileModel?>(null);
+
   final selectedTab = 0.obs;
 
   final commentController = TextEditingController();
@@ -30,7 +38,63 @@ class UserHomeController extends GetxController {
   @override
   void onInit() {
     _loadDemoData();
+    fetchUserProfile();
     super.onInit();
+  }
+
+  Future<void> fetchUserProfile() async {
+    try {
+      final response = await _apiService.get(
+        ApiEndpoints.userProfile,
+        requireAuth: true,
+      );
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        if (response.data != null && response.data is Map<String, dynamic>) {
+          userProfile.value = UserProfileModel.fromJson(response.data);
+        }
+      }
+    } catch (_) {}
+  }
+
+  String _resolveUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return '';
+    final trimmed = url.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    final base = ApiEndpoints.baseUrl.endsWith('/')
+        ? ApiEndpoints.baseUrl.substring(0, ApiEndpoints.baseUrl.length - 1)
+        : ApiEndpoints.baseUrl;
+    final path = trimmed.startsWith('/') ? trimmed : '/$trimmed';
+    return '$base$path';
+  }
+
+  String get profileImageUrl {
+    String? url = userProfile.value?.profileImage;
+    if ((url == null || url.isEmpty) && Get.isRegistered<UserProfileController>()) {
+      url = Get.find<UserProfileController>().userProfile.value?.profileImage;
+    }
+    if ((url == null || url.isEmpty) && Get.isRegistered<UserProfileSettingController>()) {
+      url = Get.find<UserProfileSettingController>().userProfile.value?.profileImage;
+    }
+    return _resolveUrl(url);
+  }
+
+  String get name {
+    var profile = userProfile.value;
+    if (profile == null && Get.isRegistered<UserProfileController>()) {
+      profile = Get.find<UserProfileController>().userProfile.value;
+    }
+    if (profile == null && Get.isRegistered<UserProfileSettingController>()) {
+      profile = Get.find<UserProfileSettingController>().userProfile.value;
+    }
+    final first = profile?.firstName?.trim() ?? '';
+    final last = profile?.lastName?.trim() ?? '';
+    final full = '$first $last'.trim();
+    if (full.isNotEmpty) return full;
+    return profile?.username ?? '';
   }
 
   void changeTab(int index) {

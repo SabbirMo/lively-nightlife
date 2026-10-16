@@ -3,10 +3,76 @@ import 'package:lively_nightlife_nightclub_party/features/role/user/user_home_vi
 import 'package:lively_nightlife_nightclub_party/features/role/user/user_home_view/model/feed_post_model.dart';
 import 'package:lively_nightlife_nightclub_party/features/role/user/user_events/controller/user_event_controller.dart';
 import 'package:lively_nightlife_nightclub_party/features/role/user/user_events/model/user_event_model.dart';
+import 'package:lively_nightlife_nightclub_party/core/services/api_endpoints.dart';
+import 'package:lively_nightlife_nightclub_party/core/services/api_service.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/model/user_profile_model.dart';
 import '../model/follow_user_model.dart';
 
 class UserProfileController extends GetxController {
+  final ApiService _apiService = ApiService();
+  final Rx<UserProfileModel?> userProfile = Rx<UserProfileModel?>(null);
+  final RxBool isLoadingProfile = false.obs;
+
   final RxInt selectedTab = 0.obs; // 0: Posts Grid, 1: Bookmarks/Saved, 2: Star/Events
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchUserProfile();
+  }
+
+  Future<void> fetchUserProfile() async {
+    try {
+      isLoadingProfile.value = true;
+      final response = await _apiService.get(
+        ApiEndpoints.userProfile,
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        if (response.data != null && response.data is Map<String, dynamic>) {
+          userProfile.value = UserProfileModel.fromJson(response.data);
+        }
+      }
+    } catch (_) {
+    } finally {
+      isLoadingProfile.value = false;
+    }
+  }
+
+  String _resolveUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return '';
+    final trimmed = url.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    final base = ApiEndpoints.baseUrl.endsWith('/')
+        ? ApiEndpoints.baseUrl.substring(0, ApiEndpoints.baseUrl.length - 1)
+        : ApiEndpoints.baseUrl;
+    final path = trimmed.startsWith('/') ? trimmed : '/$trimmed';
+    return '$base$path';
+  }
+
+  String get name {
+    final first = userProfile.value?.firstName?.trim() ?? '';
+    final last = userProfile.value?.lastName?.trim() ?? '';
+    final full = '$first $last'.trim();
+    if (full.isNotEmpty) return full;
+    return userProfile.value?.username ?? 'User';
+  }
+
+  String get username {
+    final u = userProfile.value?.username?.trim() ?? '';
+    if (u.isEmpty) return '';
+    return u.startsWith('@') ? u : '@$u';
+  }
+
+  String get profileImageUrl => _resolveUrl(userProfile.value?.profileImage);
+  String get coverImageUrl => _resolveUrl(userProfile.value?.coverImage);
+  String get bio => userProfile.value?.bio?.trim() ?? '';
+  String get locationName => userProfile.value?.locationName?.trim() ?? '';
 
   // Mock Lists for Grid tab (Posts posted by the user)
   final RxList<String> postsList = <String>[
@@ -107,10 +173,10 @@ class UserProfileController extends GetxController {
   }
 
   // Stats text getters
-  String get postsCount => postsList.length.toString();
-  String get followersCount => '2.8k';
-  String get followingCount => followingCountValue.value.toString();
-  String get eventsCount => rsvpedEvents.length.toString();
+  String get postsCount => (userProfile.value?.postCount ?? postsList.length).toString();
+  String get followersCount => (userProfile.value?.followersCount ?? 0).toString();
+  String get followingCount => (userProfile.value?.followingCount ?? followingCountValue.value).toString();
+  String get eventsCount => (userProfile.value?.eventsCount ?? rsvpedEvents.length).toString();
 
   void changeTab(int index) {
     selectedTab.value = index;

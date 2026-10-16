@@ -389,7 +389,9 @@ class ClubSettingsView extends GetView<ClubProfileController> {
   Widget _buildLogOutButton(ClubProfileController controller) {
     return InkWell(
       onTap: () {
-        controller.logout();
+        _showLogoutDialog(
+          onConfirm: () => controller.logout(),
+        );
       },
       borderRadius: BorderRadius.circular(20.r),
       child: Container(
@@ -399,7 +401,7 @@ class ClubSettingsView extends GetView<ClubProfileController> {
           color: AppColors.redColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
-            color: AppColors.redColor.withValues(alpha: 0.2),
+            color: AppColors.greyColor.withValues(alpha: 0.2),
             width: 1.w,
           ),
         ),
@@ -437,6 +439,126 @@ class ClubSettingsView extends GetView<ClubProfileController> {
             fontWeight: FontWeight.w700,
           ),
         ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog({required VoidCallback onConfirm}) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24.r),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+          decoration: BoxDecoration(
+            color: AppColors.whiteColor,
+            borderRadius: BorderRadius.circular(24.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56.w,
+                height: 56.h,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFEE2E2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.logout_rounded,
+                  color: AppColors.redColor,
+                  size: 26.sp,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              TextProperty(
+                text: 'Log Out',
+                textColor: AppColors.blackColor,
+                fontFamily: 'Sora',
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w700,
+              ),
+              SizedBox(height: 8.h),
+              TextProperty(
+                text: 'Are you sure you want to log out?',
+                textColor: AppColors.lightGreyColor,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w400,
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 24.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => Get.back(),
+                      borderRadius: BorderRadius.circular(100.r),
+                      child: Container(
+                        height: 46.h,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.whiteColor,
+                          borderRadius: BorderRadius.circular(100.r),
+                          border: Border.all(
+                            color: const Color(0xFFD1D5DB),
+                            width: 1.2.w,
+                          ),
+                        ),
+                        child: TextProperty(
+                          text: 'Cancel',
+                          textColor: AppColors.secondBlackColor,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        Get.back();
+                        onConfirm();
+                      },
+                      borderRadius: BorderRadius.circular(100.r),
+                      child: Container(
+                        height: 46.h,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.redColor,
+                          borderRadius: BorderRadius.circular(100.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.redColor.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: TextProperty(
+                          text: 'Log Out',
+                          textColor: AppColors.whiteColor,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

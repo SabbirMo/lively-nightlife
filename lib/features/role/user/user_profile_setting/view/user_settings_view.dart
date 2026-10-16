@@ -43,7 +43,10 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
               children: [
                 // Header (Back + Title)
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 12.h,
+                  ),
                   child: Row(
                     children: [
                       GestureDetector(
@@ -66,40 +69,48 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
                   ),
                 ),
                 Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Profile Card
-                        _buildProfileCard(),
-                        SizedBox(height: 24.h),
+                  child: RefreshIndicator(
+                    onRefresh: controller.fetchUserProfile,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 10.h,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Profile Card
+                          _buildProfileCard(controller),
+                          SizedBox(height: 24.h),
 
-                        // Account Section Header
-                        _buildSectionHeader('ACCOUNT'),
-                        SizedBox(height: 8.h),
+                          // Account Section Header
+                          _buildSectionHeader('ACCOUNT'),
+                          SizedBox(height: 8.h),
 
-                        // Account Actions Card
-                        _buildAccountCard(context, controller),
-                        SizedBox(height: 24.h),
+                          // Account Actions Card
+                          _buildAccountCard(context, controller),
+                          SizedBox(height: 24.h),
 
-                        // Support Section Header
-                        _buildSectionHeader('SUPPORT'),
-                        SizedBox(height: 8.h),
+                          // Support Section Header
+                          _buildSectionHeader('SUPPORT'),
+                          SizedBox(height: 8.h),
 
-                        // Support Actions Card
-                        _buildSupportCard(),
-                        SizedBox(height: 24.h),
+                          // Support Actions Card
+                          _buildSupportCard(),
+                          SizedBox(height: 24.h),
 
-                        // Log Out Card
-                        _buildLogOutButton(controller),
-                        SizedBox(height: 32.h),
+                          // Log Out Card
+                          _buildLogOutButton(controller),
+                          SizedBox(height: 32.h),
 
-                        // Delete Account Card
-                        _buildDeleteAccountButton(controller),
-                        SizedBox(height: 40.h),
-                      ],
+                          // Delete Account Card
+                          _buildDeleteAccountButton(controller),
+                          SizedBox(height: 40.h),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -111,72 +122,123 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
     );
   }
 
-  Widget _buildProfileCard() {
-    return Container(
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.w),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Profile Photo
-          Container(
-            width: 64.w,
-            height: 64.h,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18.r),
-              image: const DecorationImage(
-                image: NetworkImage('https://i.pravatar.cc/150?img=10'),
-                fit: BoxFit.cover,
+  Widget _buildProfileCard(UserProfileSettingController controller) {
+    return Obx(() {
+      final isLoading = controller.isLoadingProfile.value;
+      final imageUrl = controller.profileImageUrl;
+      final displayName = isLoading ? 'Loading...' : controller.name;
+      final username = isLoading ? '' : controller.username;
+      final initial = displayName.isNotEmpty
+          ? displayName[0].toUpperCase()
+          : 'U';
+
+      return Container(
+        padding: EdgeInsets.all(16.r),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24.r),
+          border: Border.all(color: const Color(0xFFF1F5F9), width: 1.w),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Profile Photo
+            Container(
+              width: 64.w,
+              height: 64.h,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18.r),
+                color: const Color(0xFFF1F5F9),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18.r),
+                child: imageUrl != null && imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        width: 64.w,
+                        height: 64.h,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: TextProperty(
+                              text: initial,
+                              textColor: AppColors.primaryColor,
+                              fontSize: 24.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Sora',
+                            ),
+                          );
+                        },
+                      )
+                    : Center(
+                        child: TextProperty(
+                          text: initial,
+                          textColor: AppColors.primaryColor,
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Sora',
+                        ),
+                      ),
               ),
             ),
-          ),
-          SizedBox(width: 16.w),
-          // Name and Tag
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextProperty(
-                  text: 'Alex Rivera',
-                  textColor: AppColors.blackColor,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Sora',
-                ),
-                SizedBox(height: 4.h),
-                TextProperty(
-                  text: '@alex_nights',
-                  textColor: AppColors.lightGreyColor,
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-              ],
+            SizedBox(width: 16.w),
+            // Name and Tag
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextProperty(
+                    text: displayName,
+                    textColor: AppColors.blackColor,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Sora',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4.h),
+                  TextProperty(
+                    text: username,
+                    textColor: AppColors.lightGreyColor,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-          ),
-          // Edit Pencil Icon
-          GestureDetector(
-            onTap: () {
-              Get.snackbar('Edit Profile', 'Edit Profile flow coming soon!');
-            },
-            child: Icon(
-              Icons.edit_outlined,
-              color: AppColors.lightGreyColor,
-              size: 22.sp,
+            // Edit Pencil Icon
+            GestureDetector(
+              onTap: () {
+                Get.toNamed(AppRoute.editProfileView);
+              },
+              child: Icon(
+                Icons.edit_outlined,
+                color: AppColors.lightGreyColor,
+                size: 22.sp,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildSectionHeader(String title) {
@@ -191,7 +253,10 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
     );
   }
 
-  Widget _buildAccountCard(BuildContext context, UserProfileSettingController controller) {
+  Widget _buildAccountCard(
+    BuildContext context,
+    UserProfileSettingController controller,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -270,7 +335,10 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
             backgroundColor: const Color(0xFFECFDF5),
             title: 'Billing & Payments',
             onTap: () {
-              Get.snackbar('Billing & Payments', 'Billing details coming soon!');
+              Get.snackbar(
+                'Billing & Payments',
+                'Billing details coming soon!',
+              );
             },
           ),
           _buildDivider(),
@@ -281,7 +349,10 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
             backgroundColor: const Color(0xFFFFFBEB),
             title: 'Help & Support',
             onTap: () {
-              Get.snackbar('Help & Support', 'Help and documentation coming soon!');
+              Get.snackbar(
+                'Help & Support',
+                'Help and documentation coming soon!',
+              );
             },
           ),
         ],
@@ -310,11 +381,7 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
                 color: backgroundColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 20.sp,
-              ),
+              child: Icon(icon, color: iconColor, size: 20.sp),
             ),
             SizedBox(width: 16.w),
             // Title
@@ -351,7 +418,7 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
   Widget _buildLogOutButton(UserProfileSettingController controller) {
     return InkWell(
       onTap: () {
-        controller.logout();
+        _showLogoutDialog(onConfirm: () => controller.logout());
       },
       borderRadius: BorderRadius.circular(20.r),
       child: Container(
@@ -365,11 +432,7 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.logout_outlined,
-              color: AppColors.redColor,
-              size: 20.sp,
-            ),
+            Icon(Icons.logout_outlined, color: AppColors.redColor, size: 20.sp),
             SizedBox(width: 8.w),
             TextProperty(
               text: 'Log Out',
@@ -391,11 +454,7 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.delete_outline,
-            color: AppColors.redColor,
-            size: 20.sp,
-          ),
+          Icon(Icons.delete_outline, color: AppColors.redColor, size: 20.sp),
           SizedBox(width: 8.w),
           TextProperty(
             text: 'Delete Account',
@@ -404,6 +463,126 @@ class UserSettingsView extends GetView<UserProfileSettingController> {
             fontWeight: FontWeight.w700,
           ),
         ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog({required VoidCallback onConfirm}) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24.r),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+          decoration: BoxDecoration(
+            color: AppColors.whiteColor,
+            borderRadius: BorderRadius.circular(24.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56.w,
+                height: 56.h,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFEE2E2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.logout_rounded,
+                  color: AppColors.redColor,
+                  size: 26.sp,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              TextProperty(
+                text: 'Log Out',
+                textColor: AppColors.blackColor,
+                fontFamily: 'Sora',
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w700,
+              ),
+              SizedBox(height: 8.h),
+              TextProperty(
+                text: 'Are you sure you want to log out?',
+                textColor: AppColors.lightGreyColor,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w400,
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 24.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => Get.back(),
+                      borderRadius: BorderRadius.circular(100.r),
+                      child: Container(
+                        height: 46.h,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.whiteColor,
+                          borderRadius: BorderRadius.circular(100.r),
+                          border: Border.all(
+                            color: const Color(0xFFD1D5DB),
+                            width: 1.2.w,
+                          ),
+                        ),
+                        child: TextProperty(
+                          text: 'Cancel',
+                          textColor: AppColors.secondBlackColor,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        Get.back();
+                        onConfirm();
+                      },
+                      borderRadius: BorderRadius.circular(100.r),
+                      child: Container(
+                        height: 46.h,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.redColor,
+                          borderRadius: BorderRadius.circular(100.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.redColor.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: TextProperty(
+                          text: 'Log Out',
+                          textColor: AppColors.whiteColor,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

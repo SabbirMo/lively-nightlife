@@ -32,10 +32,13 @@ class UserProfileView extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 10.h),
         onTap: () => controller.addMockPost(),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: RefreshIndicator(
+        onRefresh: () => controller.fetchUserProfile(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Faded Cover Photo Header Widget
             const UserProfileHeaderWidget(),
             SizedBox(height: 16.h),
@@ -157,6 +160,7 @@ class UserProfileView extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }

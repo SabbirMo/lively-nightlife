@@ -14,11 +14,13 @@ class TokenStorageService {
   static const String _refreshTokenKey = 'refresh';
   static const String _userIdKey = 'user_id';
   static const String _activeProfileKey = 'active_profile';
+  static const String _isLoggedInKey = 'is_logged_in';
 
   /// Save access token and auto-extract user_id/active_profile if present in JWT
   static Future<void> saveAccessToken(String token) async {
     try {
       await _storage.write(_accessTokenKey, token);
+      await _storage.write(_isLoggedInKey, true);
 
       final payload = decodeJwt(token);
       if (payload != null) {
@@ -111,10 +113,24 @@ class TokenStorageService {
     return _storage.read<String>(_activeProfileKey);
   }
 
+  /// Save active profile ('user' or 'venue')
+  static Future<void> saveActiveProfile(String profile) async {
+    try {
+      await _storage.write(_activeProfileKey, profile);
+    } catch (e) {
+      AppLoggerHelper.error('Failed to save active profile: $e');
+    }
+  }
+
   /// Check if user has an active access token
   static bool hasToken() {
     final token = _storage.read<String>(_accessTokenKey);
     return token != null && token.isNotEmpty;
+  }
+
+  /// Check if user is logged in
+  static bool isLoggedIn() {
+    return hasToken();
   }
 
   /// Safely decode JWT payload
@@ -142,17 +158,24 @@ class TokenStorageService {
       await _storage.remove(_refreshTokenKey);
       await _storage.remove(_userIdKey);
       await _storage.remove(_activeProfileKey);
+      await _storage.remove(_isLoggedInKey);
       await _storage.remove('is_logged_in');
+      await _storage.remove('user_profile');
+      await _storage.remove('auth_token');
+      await _storage.remove('token');
       AppLoggerHelper.info('Tokens cleared successfully');
     } catch (e) {
       AppLoggerHelper.error('Failed to clear tokens: $e');
     }
   }
 
-  /// Complete logout helper: clears all tokens, resets DioClient, and navigates to login
+  /// Complete logout helper: clears all tokens, resets DioClient, clears memory and navigates to login
   static Future<void> logout() async {
     await clearTokens();
     DioClient.reset();
+    try {
+      Get.deleteAll(force: true);
+    } catch (_) {}
     Get.offAllNamed(AppRoute.loginView);
   }
 }

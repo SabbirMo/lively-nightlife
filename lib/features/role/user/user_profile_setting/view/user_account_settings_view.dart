@@ -82,35 +82,39 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
                               ),
                             ],
                           ),
-                          child: Column(
-                            children: [
-                              // Change Email
-                              _buildDetailTile(
-                                label: 'Change Email',
-                                value: controller.email,
-                                onTap: () {
-                                  Get.snackbar('Change Email', 'Email update form coming soon!');
-                                },
-                              ),
-                              _buildDivider(),
-                              // Change Password
-                              _buildDetailTile(
-                                label: 'Change Password',
-                                value: controller.password,
-                                onTap: () {
-                                  Get.snackbar('Change Password', 'Password reset flow coming soon!');
-                                },
-                              ),
-                              _buildDivider(),
-                              // Purchase History
-                              _buildDetailTile(
-                                label: 'Purchase History',
-                                value: controller.purchaseHistory,
-                                onTap: () {
-                                  Get.snackbar('Purchase History', 'Purchase history list coming soon!');
-                                },
-                              ),
-                            ],
+                          child: Obx(
+                            () => Column(
+                              children: [
+                                // Change Email
+                                _buildDetailTile(
+                                  label: 'Change Email',
+                                  value: controller.email.isNotEmpty
+                                      ? controller.email
+                                      : 'No email',
+                                  onTap: () {
+                                    Get.snackbar('Change Email', 'Email update form coming soon!');
+                                  },
+                                ),
+                                _buildDivider(),
+                                // Change Password
+                                _buildDetailTile(
+                                  label: 'Change Password',
+                                  value: controller.password,
+                                  onTap: () {
+                                    Get.snackbar('Change Password', 'Password reset flow coming soon!');
+                                  },
+                                ),
+                                _buildDivider(),
+                                // Purchase History
+                                _buildDetailTile(
+                                  label: 'Purchase History',
+                                  value: controller.purchaseHistory,
+                                  onTap: () {
+                                    Get.snackbar('Purchase History', 'Purchase history list coming soon!');
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],

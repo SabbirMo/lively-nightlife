@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:lively_nightlife_nightclub_party/core/common/widgets/text_property.dart';
 import 'package:lively_nightlife_nightclub_party/core/utils/constants/colors.dart';
-import 'package:lively_nightlife_nightclub_party/core/utils/constants/icon_path.dart';
 import 'package:lively_nightlife_nightclub_party/core/utils/constants/image_path.dart';
 import 'package:lively_nightlife_nightclub_party/features/bottom_navigation_bar/controllers/user_bottom_navigation_bar_controller.dart';
 import 'package:lively_nightlife_nightclub_party/routes/app_routes.dart';
@@ -12,6 +10,7 @@ import '../controller/user_chat_controller.dart';
 import '../model/user_chat_model.dart';
 import '../widget/user_chat_filter_tab_bar.dart';
 import '../widget/user_chat_stories_widget.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_home_view/widget/home_header_widget.dart';
 
 class UserChatInboxView extends StatelessWidget {
   const UserChatInboxView({super.key});
@@ -42,105 +41,11 @@ class UserChatInboxView extends StatelessWidget {
                     horizontal: 16.w,
                     vertical: 12.h,
                   ),
-                  child: Row(
-                    children: [
-                      // Back Button
-                      GestureDetector(
-                        onTap: () {
-                          // Change bottom navbar tab to Home (index 0)
-                          bottomNavController.changeTab(0);
-                        },
-                        child: SvgPicture.asset(
-                          IconPath.backButton,
-                          width: 16.w,
-                          height: 16.h,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.secondBlackColor,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      // Title
-                      TextProperty(
-                        text: 'Lively',
-                        textColor: AppColors.secondBlackColor,
-                        fontFamily: 'Sora',
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      const Spacer(),
-                      // Notification bell with red badge
-                      Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          GestureDetector(
-                            onTap: () =>
-                                Get.toNamed(AppRoute.userNotificationView),
-                            child: SvgPicture.asset(
-                              IconPath.notificationBellIcon,
-                              width: 24.w,
-                              height: 24.h,
-                            ),
-                          ),
-                          Positioned(
-                            right: -2,
-                            top: -2,
-                            child: Container(
-                              width: 16.w,
-                              height: 16.h,
-                              decoration: const BoxDecoration(
-                                color: AppColors.redColor,
-                                shape: BoxShape.circle,
-                              ),
-                              alignment: Alignment.center,
-                              child: TextProperty(
-                                text: '4',
-                                textColor: AppColors.whiteColor,
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(width: 16.w),
-                      // Profile Avatar with green active indicator dot
-                      Stack(
-                        children: [
-                          Container(
-                            width: 38.w,
-                            height: 38.h,
-                            decoration: const BoxDecoration(
-                              color: AppColors.grey50Color,
-                              shape: BoxShape.circle,
-                            ),
-                            child: CircleAvatar(
-                              radius: 18.r,
-                              backgroundImage: const NetworkImage(
-                                'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6',
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: Container(
-                              width: 10.w,
-                              height: 10.h,
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.whiteColor,
-                                  width: 1.5.r,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                  child: HomeHeaderWidget(
+                    showBackButton: true,
+                    onBackTap: () {
+                      bottomNavController.changeTab(0);
+                    },
                   ),
                 ),
                 SizedBox(height: 12.h),
