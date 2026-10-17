@@ -52,6 +52,10 @@ import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile
 import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/view/user_privacy_settings_view.dart';
 import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/bindings/edit_profile_binding.dart';
 import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/view/edit_profile_view.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/bindings/change_password_binding.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/view/change_password_view.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/bindings/change_email_binding.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_profile_setting/view/change_email_view.dart';
 
 class AppRoute {
   static const String splashView = '/splashView';
@@ -65,6 +69,7 @@ class AppRoute {
   static const String clubBottomNavbarView = '/clubBottomNavbarView';
   static const String notificationView = '/notificationView';
   static const String changePasswordView = '/changePasswordView';
+  static const String changeEmailView = '/changeEmailView';
   static const String getStartedView = '/getstartedView';
   static const String otpVerificationView = '/otpVerificationView';
   static const String permissionView = '/permissionView';
@@ -100,6 +105,7 @@ class AppRoute {
   static String getClubBottomNavbarView() => clubBottomNavbarView;
   static String getNotificationView() => notificationView;
   static String getChangePasswordView() => changePasswordView;
+  static String getChangeEmailView() => changeEmailView;
   static String getGetStartedView() => getStartedView;
   static String getOtpVerificationView() => otpVerificationView;
   static String getPermissionView() => permissionView;
@@ -173,11 +179,16 @@ class AppRoute {
     //   page: () => const NotificationView(),
     //   binding: NotificationBinding(),
     // ),
-    // GetPage(
-    //   name: changePasswordView,
-    //   page: () => const ChangePasswordView(),
-    //   binding: ChangePasswordBinding(),
-    // ),
+    GetPage(
+      name: changePasswordView,
+      page: () => const ChangePasswordView(),
+      binding: ChangePasswordBinding(),
+    ),
+    GetPage(
+      name: changeEmailView,
+      page: () => const ChangeEmailView(),
+      binding: ChangeEmailBinding(),
+    ),
     GetPage(name: getStartedView, page: () => GetStartedView()),
     GetPage(
       name: otpVerificationView,

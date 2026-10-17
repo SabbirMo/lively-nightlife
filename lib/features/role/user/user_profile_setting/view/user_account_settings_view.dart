@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:lively_nightlife_nightclub_party/core/common/widgets/text_property.dart';
 import 'package:lively_nightlife_nightclub_party/core/utils/constants/colors.dart';
+import 'package:lively_nightlife_nightclub_party/routes/app_routes.dart';
 import '../controller/user_profile_setting_controller.dart';
 
 class UserAccountSettingsView extends GetView<UserProfileSettingController> {
@@ -39,7 +40,10 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
               children: [
                 // Header (Back + Title)
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 12.h,
+                  ),
                   child: Row(
                     children: [
                       GestureDetector(
@@ -64,7 +68,10 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 10.h,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -73,7 +80,10 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(color: const Color(0xFFF1F5F9), width: 1.w),
+                            border: Border.all(
+                              color: const Color(0xFFF1F5F9),
+                              width: 1.w,
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.02),
@@ -92,7 +102,7 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
                                       ? controller.email
                                       : 'No email',
                                   onTap: () {
-                                    Get.snackbar('Change Email', 'Email update form coming soon!');
+                                    Get.toNamed(AppRoute.changeEmailView);
                                   },
                                 ),
                                 _buildDivider(),
@@ -101,7 +111,7 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
                                   label: 'Change Password',
                                   value: controller.password,
                                   onTap: () {
-                                    Get.snackbar('Change Password', 'Password reset flow coming soon!');
+                                    Get.toNamed(AppRoute.changePasswordView);
                                   },
                                 ),
                                 _buildDivider(),
@@ -110,7 +120,10 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
                                   label: 'Purchase History',
                                   value: controller.purchaseHistory,
                                   onTap: () {
-                                    Get.snackbar('Purchase History', 'Purchase history list coming soon!');
+                                    Get.snackbar(
+                                      'Purchase History',
+                                      'Purchase history list coming soon!',
+                                    );
                                   },
                                 ),
                               ],
