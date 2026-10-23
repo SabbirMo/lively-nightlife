@@ -526,18 +526,79 @@ class UserHomeController extends GetxController {
     }
   }
 
-  void toggleLike(FeedPostModel post) {
-    post.isLiked.toggle();
+  Future<void> toggleLike(FeedPostModel post) async {
+    final previousLiked = post.isLiked.value;
+    final previousCount = post.likeCount.value;
 
+    // Optimistic UI update
+    post.isLiked.value = !previousLiked;
     if (post.isLiked.value) {
-      post.likeCount.value++;
+      post.likeCount.value = previousCount + 1;
     } else {
-      post.likeCount.value--;
+      post.likeCount.value = (previousCount > 0) ? previousCount - 1 : 0;
+    }
+
+    try {
+      final response = await _apiService.post(
+        ApiEndpoints.postLike(post.id),
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data;
+        if (data != null && data is Map<String, dynamic>) {
+          if (data.containsKey('is_liked') && data['is_liked'] is bool) {
+            post.isLiked.value = data['is_liked'] as bool;
+          }
+          if (data.containsKey('likes_count') && data['likes_count'] is int) {
+            post.likeCount.value = data['likes_count'] as int;
+          }
+        }
+      } else {
+        // Rollback on failure status
+        post.isLiked.value = previousLiked;
+        post.likeCount.value = previousCount;
+      }
+    } catch (e) {
+      debugPrint('Error toggling like: $e');
+      // Rollback on network/error exception
+      post.isLiked.value = previousLiked;
+      post.likeCount.value = previousCount;
     }
   }
 
-  void toggleSave(FeedPostModel post) {
-    post.isSaved.toggle();
+  Future<void> toggleSave(FeedPostModel post) async {
+    final previousSaved = post.isSaved.value;
+
+    // Optimistic UI update
+    post.isSaved.value = !previousSaved;
+
+    try {
+      final response = await _apiService.post(
+        ApiEndpoints.postSave(post.id),
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data;
+        if (data != null && data is Map<String, dynamic>) {
+          if (data.containsKey('is_saved') && data['is_saved'] is bool) {
+            post.isSaved.value = data['is_saved'] as bool;
+          }
+        }
+      } else {
+        // Rollback on failure status
+        post.isSaved.value = previousSaved;
+      }
+    } catch (e) {
+      debugPrint('Error toggling save post: $e');
+      // Rollback on network/error exception
+      post.isSaved.value = previousSaved;
+    }
   }
 
   void toggleFollow(FeedPostModel post) {

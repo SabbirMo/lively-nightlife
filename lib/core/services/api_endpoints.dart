@@ -19,4 +19,6 @@ class ApiEndpoints {
   static const String forYou = '/api/social/for-you/';
   static const String followingFeed = '/api/social/following/';
   static const String nearbyFeed = '/api/social/feed/nearby/';
+  static String postLike(dynamic id) => '/api/social/posts/$id/like/';
+  static String postSave(dynamic id) => '/api/social/posts/$id/save_post/';
 }

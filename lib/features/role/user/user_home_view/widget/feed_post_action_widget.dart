@@ -104,15 +104,12 @@ class FeedPostActionsWidget extends StatelessWidget {
                 onTap: () {
                   controller.toggleSave(post);
                 },
-                child: SvgPicture.asset(
-                  IconPath.saveIcon,
-                  width: 22.w,
-                  colorFilter: ColorFilter.mode(
-                    post.isSaved.value
-                        ? AppColors.primaryColor
-                        : AppColors.greyColor,
-                    BlendMode.srcIn,
-                  ),
+                child: Icon(
+                  post.isSaved.value ? Icons.bookmark : Icons.bookmark_border,
+                  color: post.isSaved.value
+                      ? AppColors.primaryColor
+                      : AppColors.greyColor,
+                  size: 22.sp,
                 ),
               ),
             ],
