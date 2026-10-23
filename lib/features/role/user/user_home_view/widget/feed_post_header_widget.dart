@@ -14,6 +14,19 @@ class FeedPostHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasValidProfileImage = post.profileImage.isNotEmpty &&
+        (post.profileImage.startsWith('http://') ||
+            post.profileImage.startsWith('https://'));
+
+    final subtextParts = <String>[];
+    if (post.location.isNotEmpty) {
+      subtextParts.add('📍 ${post.location}');
+    }
+    if (post.time.isNotEmpty) {
+      subtextParts.add(post.time);
+    }
+    final subtext = subtextParts.join(' • ');
+
     return Row(
       children: [
         Container(
@@ -26,7 +39,21 @@ class FeedPostHeaderWidget extends StatelessWidget {
           ),
           child: CircleAvatar(
             radius: 18.r,
-            backgroundImage: NetworkImage(post.profileImage),
+            backgroundColor: AppColors.blueColor.withValues(alpha: 0.1),
+            backgroundImage:
+                hasValidProfileImage ? NetworkImage(post.profileImage) : null,
+            child: !hasValidProfileImage
+                ? Text(
+                    post.userName.isNotEmpty
+                        ? post.userName[0].toUpperCase()
+                        : 'V',
+                    style: TextStyle(
+                      color: AppColors.primaryColor,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
           ),
         ),
 
@@ -38,11 +65,14 @@ class FeedPostHeaderWidget extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  TextProperty(
-                    text: post.userName,
-                    textColor: AppColors.blackColor,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
+                  Flexible(
+                    child: TextProperty(
+                      text: post.userName,
+                      textColor: AppColors.blackColor,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
 
                   SizedBox(width: 8.w),
@@ -63,14 +93,16 @@ class FeedPostHeaderWidget extends StatelessWidget {
                 ],
               ),
 
-              SizedBox(height: 2.h),
-
-              TextProperty(
-                text: '📍 ${post.location} • ${post.time}',
-                textColor: AppColors.greyColor,
-                fontSize: 11.sp,
-                fontWeight: FontWeight.w400,
-              ),
+              if (subtext.isNotEmpty) ...[
+                SizedBox(height: 2.h),
+                TextProperty(
+                  text: subtext,
+                  textColor: AppColors.greyColor,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w400,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ],
           ),
         ),

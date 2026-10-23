@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:lively_nightlife_nightclub_party/core/utils/constants/image_path.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:lively_nightlife_nightclub_party/core/services/api_endpoints.dart';
 import 'package:lively_nightlife_nightclub_party/core/services/api_service.dart';
@@ -17,10 +16,32 @@ class UserHomeController extends GetxController {
   final selectedTab = 0.obs;
 
   final commentController = TextEditingController();
+  final ScrollController scrollController = ScrollController();
 
   final forYouPosts = <FeedPostModel>[].obs;
   final followingPosts = <FeedPostModel>[].obs;
   final nearbyPosts = <FeedPostModel>[].obs;
+
+  // Pagination & Loading States for For-You Feed
+  final isLoadingForYou = false.obs;
+  final isLoadingMore = false.obs;
+  final hasNextPage = true.obs;
+  String? _nextUrl;
+  int _currentPage = 1;
+
+  // Pagination & Loading States for Following Feed
+  final isLoadingFollowing = false.obs;
+  final isLoadingMoreFollowing = false.obs;
+  final hasNextPageFollowing = true.obs;
+  String? _nextUrlFollowing;
+  int _currentPageFollowing = 1;
+
+  // Pagination & Loading States for Nearby Feed
+  final isLoadingNearby = false.obs;
+  final isLoadingMoreNearby = false.obs;
+  final hasNextPageNearby = true.obs;
+  String? _nextUrlNearby;
+  int _currentPageNearby = 1;
 
   List<FeedPostModel> get currentPosts {
     switch (selectedTab.value) {
@@ -37,10 +58,404 @@ class UserHomeController extends GetxController {
 
   @override
   void onInit() {
-    _loadDemoData();
-    fetchUserProfile();
     super.onInit();
+    _setupScrollListener();
+    fetchUserProfile();
+    fetchForYouPosts();
+    fetchFollowingPosts();
+    fetchNearbyPosts();
   }
+
+  void _setupScrollListener() {
+    scrollController.addListener(() {
+      if (!scrollController.hasClients) return;
+
+      if (scrollController.position.pixels >=
+          scrollController.position.maxScrollExtent - 250) {
+        if (selectedTab.value == 0 &&
+            !isLoadingForYou.value &&
+            !isLoadingMore.value &&
+            hasNextPage.value) {
+          loadMoreForYouPosts();
+        } else if (selectedTab.value == 1 &&
+            !isLoadingFollowing.value &&
+            !isLoadingMoreFollowing.value &&
+            hasNextPageFollowing.value) {
+          loadMoreFollowingPosts();
+        } else if (selectedTab.value == 2 &&
+            !isLoadingNearby.value &&
+            !isLoadingMoreNearby.value &&
+            hasNextPageNearby.value) {
+          loadMoreNearbyPosts();
+        }
+      }
+    });
+  }
+
+  // =================== FOR YOU FEED ===================
+
+  Future<void> fetchForYouPosts({bool isRefresh = false}) async {
+    if (isRefresh) {
+      _currentPage = 1;
+      _nextUrl = null;
+      hasNextPage.value = true;
+    } else {
+      if (forYouPosts.isEmpty) {
+        isLoadingForYou.value = true;
+      }
+      _currentPage = 1;
+      _nextUrl = null;
+      hasNextPage.value = true;
+    }
+
+    try {
+      final response = await _apiService.get(
+        ApiEndpoints.forYou,
+        queryParameters: {'page': 1},
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data;
+        if (data != null && data is Map<String, dynamic>) {
+          _nextUrl = data['next']?.toString();
+          hasNextPage.value = _nextUrl != null && _nextUrl!.isNotEmpty;
+
+          final rawResults = data['results'];
+          if (rawResults is List) {
+            final List<FeedPostModel> loaded = [];
+            for (final item in rawResults) {
+              if (item is Map<String, dynamic>) {
+                loaded.add(FeedPostModel.fromJson(item));
+              }
+            }
+            forYouPosts.assignAll(loaded);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching for-you posts: $e');
+    } finally {
+      isLoadingForYou.value = false;
+    }
+  }
+
+  Future<void> loadMoreForYouPosts() async {
+    if (isLoadingMore.value || !hasNextPage.value) return;
+
+    isLoadingMore.value = true;
+    _currentPage++;
+
+    try {
+      String requestPath = ApiEndpoints.forYou;
+      Map<String, dynamic>? queryParams = {'page': _currentPage};
+
+      if (_nextUrl != null && _nextUrl!.isNotEmpty) {
+        try {
+          final uri = Uri.parse(_nextUrl!);
+          requestPath = uri.path;
+          queryParams = uri.queryParameters.isNotEmpty
+              ? uri.queryParameters
+              : null;
+        } catch (_) {
+          requestPath = ApiEndpoints.forYou;
+          queryParams = {'page': _currentPage};
+        }
+      }
+
+      final response = await _apiService.get(
+        requestPath,
+        queryParameters: queryParams,
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data;
+        if (data != null && data is Map<String, dynamic>) {
+          _nextUrl = data['next']?.toString();
+          hasNextPage.value = _nextUrl != null && _nextUrl!.isNotEmpty;
+
+          final rawResults = data['results'];
+          if (rawResults is List) {
+            final List<FeedPostModel> loaded = [];
+            for (final item in rawResults) {
+              if (item is Map<String, dynamic>) {
+                loaded.add(FeedPostModel.fromJson(item));
+              }
+            }
+            forYouPosts.addAll(loaded);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading more for-you posts: $e');
+      _currentPage--;
+    } finally {
+      isLoadingMore.value = false;
+    }
+  }
+
+  // =================== FOLLOWING FEED ===================
+
+  Future<void> fetchFollowingPosts({bool isRefresh = false}) async {
+    if (isRefresh) {
+      _currentPageFollowing = 1;
+      _nextUrlFollowing = null;
+      hasNextPageFollowing.value = true;
+    } else {
+      if (followingPosts.isEmpty) {
+        isLoadingFollowing.value = true;
+      }
+      _currentPageFollowing = 1;
+      _nextUrlFollowing = null;
+      hasNextPageFollowing.value = true;
+    }
+
+    try {
+      final response = await _apiService.get(
+        ApiEndpoints.followingFeed,
+        queryParameters: {'page': 1},
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data;
+        if (data != null) {
+          List<dynamic>? rawList;
+          if (data is Map<String, dynamic>) {
+            _nextUrlFollowing = data['next']?.toString();
+            hasNextPageFollowing.value =
+                _nextUrlFollowing != null && _nextUrlFollowing!.isNotEmpty;
+            if (data['results'] is List) {
+              rawList = data['results'] as List;
+            }
+          } else if (data is List) {
+            rawList = data;
+            hasNextPageFollowing.value = false;
+          }
+
+          if (rawList != null) {
+            final List<FeedPostModel> loaded = [];
+            for (final item in rawList) {
+              if (item is Map<String, dynamic>) {
+                loaded.add(FeedPostModel.fromJson(item));
+              }
+            }
+            followingPosts.assignAll(loaded);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching following posts: $e');
+    } finally {
+      isLoadingFollowing.value = false;
+    }
+  }
+
+  Future<void> loadMoreFollowingPosts() async {
+    if (isLoadingMoreFollowing.value || !hasNextPageFollowing.value) return;
+
+    isLoadingMoreFollowing.value = true;
+    _currentPageFollowing++;
+
+    try {
+      String requestPath = ApiEndpoints.followingFeed;
+      Map<String, dynamic>? queryParams = {'page': _currentPageFollowing};
+
+      if (_nextUrlFollowing != null && _nextUrlFollowing!.isNotEmpty) {
+        try {
+          final uri = Uri.parse(_nextUrlFollowing!);
+          requestPath = uri.path;
+          queryParams = uri.queryParameters.isNotEmpty
+              ? uri.queryParameters
+              : null;
+        } catch (_) {
+          requestPath = ApiEndpoints.followingFeed;
+          queryParams = {'page': _currentPageFollowing};
+        }
+      }
+
+      final response = await _apiService.get(
+        requestPath,
+        queryParameters: queryParams,
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data;
+        if (data != null) {
+          List<dynamic>? rawList;
+          if (data is Map<String, dynamic>) {
+            _nextUrlFollowing = data['next']?.toString();
+            hasNextPageFollowing.value =
+                _nextUrlFollowing != null && _nextUrlFollowing!.isNotEmpty;
+            if (data['results'] is List) {
+              rawList = data['results'] as List;
+            }
+          } else if (data is List) {
+            rawList = data;
+            hasNextPageFollowing.value = false;
+          }
+
+          if (rawList != null) {
+            final List<FeedPostModel> loaded = [];
+            for (final item in rawList) {
+              if (item is Map<String, dynamic>) {
+                loaded.add(FeedPostModel.fromJson(item));
+              }
+            }
+            followingPosts.addAll(loaded);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading more following posts: $e');
+      _currentPageFollowing--;
+    } finally {
+      isLoadingMoreFollowing.value = false;
+    }
+  }
+
+  // =================== NEARBY FEED ===================
+
+  Future<void> fetchNearbyPosts({bool isRefresh = false}) async {
+    if (isRefresh) {
+      _currentPageNearby = 1;
+      _nextUrlNearby = null;
+      hasNextPageNearby.value = true;
+    } else {
+      if (nearbyPosts.isEmpty) {
+        isLoadingNearby.value = true;
+      }
+      _currentPageNearby = 1;
+      _nextUrlNearby = null;
+      hasNextPageNearby.value = true;
+    }
+
+    try {
+      final Map<String, dynamic> queryParams = {'page': 1};
+      if (userProfile.value?.lat != null && userProfile.value?.lng != null) {
+        queryParams['lat'] = userProfile.value!.lat;
+        queryParams['lng'] = userProfile.value!.lng;
+      }
+
+      final response = await _apiService.get(
+        ApiEndpoints.nearbyFeed,
+        queryParameters: queryParams,
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data;
+        if (data != null) {
+          List<dynamic>? rawList;
+          if (data is Map<String, dynamic>) {
+            _nextUrlNearby = data['next']?.toString();
+            hasNextPageNearby.value =
+                _nextUrlNearby != null && _nextUrlNearby!.isNotEmpty;
+            if (data['results'] is List) {
+              rawList = data['results'] as List;
+            }
+          } else if (data is List) {
+            rawList = data;
+            hasNextPageNearby.value = false;
+          }
+
+          if (rawList != null) {
+            final List<FeedPostModel> loaded = [];
+            for (final item in rawList) {
+              if (item is Map<String, dynamic>) {
+                loaded.add(FeedPostModel.fromJson(item));
+              }
+            }
+            nearbyPosts.assignAll(loaded);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching nearby posts: $e');
+    } finally {
+      isLoadingNearby.value = false;
+    }
+  }
+
+  Future<void> loadMoreNearbyPosts() async {
+    if (isLoadingMoreNearby.value || !hasNextPageNearby.value) return;
+
+    isLoadingMoreNearby.value = true;
+    _currentPageNearby++;
+
+    try {
+      String requestPath = ApiEndpoints.nearbyFeed;
+      Map<String, dynamic>? queryParams = {'page': _currentPageNearby};
+
+      if (_nextUrlNearby != null && _nextUrlNearby!.isNotEmpty) {
+        try {
+          final uri = Uri.parse(_nextUrlNearby!);
+          requestPath = uri.path;
+          queryParams = uri.queryParameters.isNotEmpty
+              ? uri.queryParameters
+              : null;
+        } catch (_) {
+          requestPath = ApiEndpoints.nearbyFeed;
+          queryParams = {'page': _currentPageNearby};
+        }
+      }
+
+      final response = await _apiService.get(
+        requestPath,
+        queryParameters: queryParams,
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data;
+        if (data != null) {
+          List<dynamic>? rawList;
+          if (data is Map<String, dynamic>) {
+            _nextUrlNearby = data['next']?.toString();
+            hasNextPageNearby.value =
+                _nextUrlNearby != null && _nextUrlNearby!.isNotEmpty;
+            if (data['results'] is List) {
+              rawList = data['results'] as List;
+            }
+          } else if (data is List) {
+            rawList = data;
+            hasNextPageNearby.value = false;
+          }
+
+          if (rawList != null) {
+            final List<FeedPostModel> loaded = [];
+            for (final item in rawList) {
+              if (item is Map<String, dynamic>) {
+                loaded.add(FeedPostModel.fromJson(item));
+              }
+            }
+            nearbyPosts.addAll(loaded);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading more nearby posts: $e');
+      _currentPageNearby--;
+    } finally {
+      isLoadingMoreNearby.value = false;
+    }
+  }
+
+  // =================== PROFILE & OTHER ===================
 
   Future<void> fetchUserProfile() async {
     try {
@@ -73,11 +488,16 @@ class UserHomeController extends GetxController {
 
   String get profileImageUrl {
     String? url = userProfile.value?.profileImage;
-    if ((url == null || url.isEmpty) && Get.isRegistered<UserProfileController>()) {
+    if ((url == null || url.isEmpty) &&
+        Get.isRegistered<UserProfileController>()) {
       url = Get.find<UserProfileController>().userProfile.value?.profileImage;
     }
-    if ((url == null || url.isEmpty) && Get.isRegistered<UserProfileSettingController>()) {
-      url = Get.find<UserProfileSettingController>().userProfile.value?.profileImage;
+    if ((url == null || url.isEmpty) &&
+        Get.isRegistered<UserProfileSettingController>()) {
+      url = Get.find<UserProfileSettingController>()
+          .userProfile
+          .value
+          ?.profileImage;
     }
     return _resolveUrl(url);
   }
@@ -99,6 +519,11 @@ class UserHomeController extends GetxController {
 
   void changeTab(int index) {
     selectedTab.value = index;
+    if (index == 1 && followingPosts.isEmpty && !isLoadingFollowing.value) {
+      fetchFollowingPosts();
+    } else if (index == 2 && nearbyPosts.isEmpty && !isLoadingNearby.value) {
+      fetchNearbyPosts();
+    }
   }
 
   void toggleLike(FeedPostModel post) {
@@ -143,57 +568,9 @@ class UserHomeController extends GetxController {
     Get.snackbar('Shared', 'Post shared with $userName');
   }
 
-  void _loadDemoData() {
-    forYouPosts.assignAll([
-      _demoPost(id: 1, name: 'luna_vibes'),
-      _demoPost(id: 2, name: 'party_queen'),
-    ]);
-
-    followingPosts.assignAll([
-      _demoPost(id: 3, name: 'dj_alex'),
-      _demoPost(id: 4, name: 'nightlife_88'),
-    ]);
-
-    nearbyPosts.assignAll([
-      _demoPost(id: 5, name: 'miami_vibes'),
-      _demoPost(id: 6, name: 'club_fanatic'),
-    ]);
-  }
-
-  FeedPostModel _demoPost({required int id, required String name}) {
-    return FeedPostModel(
-      id: id,
-      userName: name,
-      profileImage: 'https://i.pravatar.cc/150?img=$id',
-      location: 'Story Nightclub, Miami',
-      time: '2h',
-      image: ImagePath.feedImage,
-      caption:
-          'Last night at Story Miami was absolutely INSANE 🔥🔥 The energy was unreal...',
-      hashtags: '#StoryMiami #NightlifeVibes #Miami',
-      isLiked: false,
-      isSaved: false,
-      isFollowing: false,
-      likeCount: 8400,
-      commentCount: 342,
-      shareCount: 189,
-      comments: [
-        CommentModel(
-          userName: 'party_queen',
-          comment: 'The vibes were INSANE 🔥🔥',
-          time: '1h',
-        ),
-        CommentModel(
-          userName: 'nightlifer_88',
-          comment: 'Need to be there next time!',
-          time: '2h',
-        ),
-      ],
-    );
-  }
-
   @override
   void onClose() {
+    scrollController.dispose();
     commentController.dispose();
     super.onClose();
   }

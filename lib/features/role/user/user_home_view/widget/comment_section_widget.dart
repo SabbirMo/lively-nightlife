@@ -21,36 +21,76 @@ class CommentSectionWidget extends StatelessWidget {
     return Column(
       children: [
         ...post.comments.map(
-          (comment) => Padding(
-            padding: EdgeInsets.only(bottom: 12.h),
-            child: Row(
-              children: [
-                CircleAvatar(radius: 12.r),
+          (comment) {
+            final hasPic = comment.profileImage != null &&
+                comment.profileImage!.isNotEmpty &&
+                (comment.profileImage!.startsWith('http://') ||
+                    comment.profileImage!.startsWith('https://'));
 
-                SizedBox(width: 8.w),
+            return Padding(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 14.r,
+                    backgroundColor: AppColors.blueColor.withValues(alpha: 0.1),
+                    backgroundImage:
+                        hasPic ? NetworkImage(comment.profileImage!) : null,
+                    child: !hasPic
+                        ? Text(
+                            comment.userName.isNotEmpty
+                                ? comment.userName[0].toUpperCase()
+                                : 'U',
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryColor,
+                            ),
+                          )
+                        : null,
+                  ),
 
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '${comment.userName} ',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.blackColor,
+                  SizedBox(width: 8.w),
+
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '${comment.userName} ',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.blackColor,
+                              fontSize: 13.sp,
+                            ),
                           ),
-                        ),
-                        TextSpan(
-                          text: comment.comment,
-                          style: TextStyle(color: AppColors.greyColor),
-                        ),
-                      ],
+                          TextSpan(
+                            text: comment.comment,
+                            style: TextStyle(
+                              color: AppColors.greyColor,
+                              fontSize: 13.sp,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
+
+                  if (comment.time.isNotEmpty) ...[
+                    SizedBox(width: 6.w),
+                    Text(
+                      comment.time,
+                      style: TextStyle(
+                        color: AppColors.lightGreyColor,
+                        fontSize: 11.sp,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
         ),
 
         SizedBox(height: 12.h),

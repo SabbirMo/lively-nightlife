@@ -14,4 +14,9 @@ class ApiEndpoints {
   static const String changePassword = '/api/users/password/change/';
   static const String changeEmail = '/api/users/email/change/';
   static const String userProfile = '/api/users/profile/';
+
+  // Social Endpoints
+  static const String forYou = '/api/social/for-you/';
+  static const String followingFeed = '/api/social/following/';
+  static const String nearbyFeed = '/api/social/feed/nearby/';
 }

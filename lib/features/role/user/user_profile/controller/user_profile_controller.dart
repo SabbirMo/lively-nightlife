@@ -146,7 +146,7 @@ class UserProfileController extends GetxController {
     if (Get.isRegistered<UserHomeController>()) {
       final homeController = Get.find<UserHomeController>();
       final saved = <FeedPostModel>[];
-      final seenIds = <int>{};
+      final seenIds = <dynamic>{};
       final allPosts = [
         ...homeController.forYouPosts,
         ...homeController.followingPosts,
