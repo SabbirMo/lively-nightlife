@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
@@ -17,6 +18,9 @@ class UserHomeController extends GetxController {
 
   final commentController = TextEditingController();
   final ScrollController scrollController = ScrollController();
+  final postingPostIds = <dynamic>{}.obs;
+
+  bool isPosting(dynamic postId) => postingPostIds.contains(postId);
 
   final forYouPosts = <FeedPostModel>[].obs;
   final followingPosts = <FeedPostModel>[].obs;
@@ -607,16 +611,353 @@ class UserHomeController extends GetxController {
 
   void toggleComments(FeedPostModel post) {
     post.showComments.toggle();
+    if (post.showComments.value &&
+        post.comments.isEmpty &&
+        post.commentCount.value > 0) {
+      fetchComments(post);
+    }
   }
 
-  void addComment(FeedPostModel post, String comment) {
-    if (comment.trim().isEmpty) return;
-    post.comments.add(
-      CommentModel(userName: 'You', comment: comment, time: 'Now'),
+  Future<void> fetchComments(FeedPostModel post) async {
+    try {
+      final response = await _apiService.get(
+        ApiEndpoints.postComments(post.id),
+        requireAuth: true,
+      );
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data;
+        List<dynamic>? rawList;
+        if (data is List) {
+          rawList = data;
+        } else if (data is Map<String, dynamic>) {
+          if (data['results'] is List) {
+            rawList = data['results'] as List;
+          } else if (data['comments'] is List) {
+            rawList = data['comments'] as List;
+          } else if (data['data'] is List) {
+            rawList = data['data'] as List;
+          }
+        }
+        if (rawList != null) {
+          final loaded = <CommentModel>[];
+          for (final item in rawList) {
+            if (item is Map<String, dynamic>) {
+              loaded.add(CommentModel.fromJson(item));
+            }
+          }
+          loaded.sort((a, b) {
+            if (a.createdAt != null && b.createdAt != null) {
+              return a.createdAt!.compareTo(b.createdAt!);
+            }
+            return 0;
+          });
+          post.comments.assignAll(loaded);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching comments: $e');
+    }
+  }
+
+  Future<void> addComment(FeedPostModel post, String comment) async {
+    final trimmedComment = comment.trim();
+    if (trimmedComment.isEmpty) return;
+    if (post.id == null || post.isPostingComment.value) return;
+
+    post.isPostingComment.value = true;
+    postingPostIds.add(post.id);
+
+    final myName = name.isNotEmpty ? name : 'You';
+    final myPic = profileImageUrl.isNotEmpty ? profileImageUrl : null;
+
+    final tempComment = CommentModel(
+      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+      userId: userProfile.value?.id?.toString(),
+      username: userProfile.value?.username,
+      userName: myName,
+      comment: trimmedComment,
+      time: 'Just now',
+      profileImage: myPic,
+      createdAt: DateTime.now(),
     );
 
+    // Optimistic UI updates
+    post.comments.add(tempComment);
     post.commentCount.value++;
     commentController.clear();
+
+    try {
+      final response = await _apiService.post(
+        ApiEndpoints.postComments(post.id),
+        data: {'text': trimmedComment},
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        dynamic data = response.data;
+        if (data is String) {
+          try {
+            data = jsonDecode(data);
+          } catch (_) {}
+        }
+
+        if (data != null && data is Map<String, dynamic>) {
+          Map<String, dynamic>? commentJson;
+          if (data.containsKey('id') ||
+              data.containsKey('text') ||
+              data.containsKey('comment')) {
+            commentJson = data;
+          } else if (data['data'] is Map<String, dynamic>) {
+            commentJson = data['data'] as Map<String, dynamic>;
+          } else if (data['comment'] is Map<String, dynamic>) {
+            commentJson = data['comment'] as Map<String, dynamic>;
+          }
+
+          if (commentJson != null) {
+            final parsedComment = CommentModel.fromJson(commentJson);
+            final finalComment = CommentModel(
+              id: parsedComment.id ?? tempComment.id,
+              userId: parsedComment.userId ?? userProfile.value?.id?.toString(),
+              username: parsedComment.username ?? userProfile.value?.username,
+              userName:
+                  (parsedComment.userName.isNotEmpty &&
+                      parsedComment.userName != 'User')
+                  ? parsedComment.userName
+                  : myName,
+              comment: parsedComment.comment.isNotEmpty
+                  ? parsedComment.comment
+                  : trimmedComment,
+              time:
+                  parsedComment.time.isNotEmpty &&
+                      parsedComment.time != 'Recently'
+                  ? parsedComment.time
+                  : 'Just now',
+              profileImage: parsedComment.profileImage ?? myPic,
+              createdAt: parsedComment.createdAt ?? tempComment.createdAt,
+            );
+
+            final index = post.comments.indexWhere(
+              (c) => c.id == tempComment.id,
+            );
+            if (index != -1) {
+              post.comments[index] = finalComment;
+            }
+          }
+
+          if (data.containsKey('comments_count') &&
+              data['comments_count'] is int) {
+            post.commentCount.value = data['comments_count'] as int;
+          }
+        }
+      } else {
+        // Rollback
+        post.comments.removeWhere((c) => c.id == tempComment.id);
+        if (post.commentCount.value > 0) {
+          post.commentCount.value--;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error posting comment: $e');
+      // Rollback
+      post.comments.removeWhere((c) => c.id == tempComment.id);
+      if (post.commentCount.value > 0) {
+        post.commentCount.value--;
+      }
+    } finally {
+      post.isPostingComment.value = false;
+      postingPostIds.remove(post.id);
+      post.comments.refresh();
+    }
+  }
+
+  bool isMyComment(CommentModel comment) {
+    final myId = userProfile.value?.id;
+    if (myId != null &&
+        comment.userId != null &&
+        myId.toString() == comment.userId.toString()) {
+      return true;
+    }
+    final myUsername = userProfile.value?.username?.trim();
+    if (myUsername != null &&
+        myUsername.isNotEmpty &&
+        comment.username != null &&
+        myUsername.toLowerCase() == comment.username!.trim().toLowerCase()) {
+      return true;
+    }
+    if (comment.id != null && comment.id!.startsWith('temp_')) {
+      return true;
+    }
+    if (comment.userName == 'You') return true;
+    final myFullName = name.trim();
+    if (myFullName.isNotEmpty &&
+        comment.userName.trim().toLowerCase() == myFullName.toLowerCase()) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> updateComment(
+    FeedPostModel post,
+    CommentModel comment,
+    String newText,
+  ) async {
+    final trimmed = newText.trim();
+    if (trimmed.isEmpty || trimmed == comment.comment) return;
+    if (comment.id == null) return;
+
+    final originalComment = comment.comment;
+    final index =
+        post.comments.indexWhere((c) => c.id != null && c.id == comment.id);
+    if (index == -1) return;
+
+    // Optimistic update
+    final updatedComment = post.comments[index].copyWith(comment: trimmed);
+    post.comments[index] = updatedComment;
+    post.comments.refresh();
+
+    try {
+      final response = await _apiService.patch(
+        ApiEndpoints.postCommentDetail(post.id, comment.id),
+        data: {'text': trimmed},
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        dynamic data = response.data;
+        if (data is String) {
+          try {
+            data = jsonDecode(data);
+          } catch (_) {}
+        }
+        if (data != null && data is Map<String, dynamic>) {
+          Map<String, dynamic>? commentJson;
+          if (data.containsKey('id') ||
+              data.containsKey('text') ||
+              data.containsKey('comment')) {
+            commentJson = data;
+          } else if (data['data'] is Map<String, dynamic>) {
+            commentJson = data['data'] as Map<String, dynamic>;
+          } else if (data['comment'] is Map<String, dynamic>) {
+            commentJson = data['comment'] as Map<String, dynamic>;
+          }
+
+          final serverComment = commentJson != null
+              ? CommentModel.fromJson(commentJson)
+              : CommentModel.fromJson(data);
+
+          final currentIndex = post.comments.indexWhere(
+            (c) => c.id != null && c.id == comment.id,
+          );
+          if (currentIndex != -1) {
+            post.comments[currentIndex] = post.comments[currentIndex].copyWith(
+              comment: serverComment.comment.isNotEmpty
+                  ? serverComment.comment
+                  : trimmed,
+              time: serverComment.time.isNotEmpty ? serverComment.time : null,
+            );
+            post.comments.refresh();
+          }
+        }
+      } else {
+        // Rollback
+        final rollbackIndex = post.comments.indexWhere(
+          (c) => c.id != null && c.id == comment.id,
+        );
+        if (rollbackIndex != -1) {
+          post.comments[rollbackIndex] =
+              post.comments[rollbackIndex].copyWith(comment: originalComment);
+          post.comments.refresh();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error updating comment: $e');
+      final rollbackIndex = post.comments.indexWhere(
+        (c) => c.id != null && c.id == comment.id,
+      );
+      if (rollbackIndex != -1) {
+        post.comments[rollbackIndex] =
+            post.comments[rollbackIndex].copyWith(comment: originalComment);
+        post.comments.refresh();
+      }
+    }
+  }
+
+  Future<void> deleteComment(
+    FeedPostModel post,
+    CommentModel comment,
+  ) async {
+    if (comment.id == null) return;
+
+    final index =
+        post.comments.indexWhere((c) => c.id != null && c.id == comment.id);
+    if (index == -1) return;
+
+    final removedComment = post.comments[index];
+
+    // Optimistic removal
+    post.comments.removeAt(index);
+    if (post.commentCount.value > 0) {
+      post.commentCount.value--;
+    }
+    post.comments.refresh();
+
+    try {
+      final response = await _apiService.delete(
+        ApiEndpoints.postCommentDetail(post.id, comment.id),
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        // Successfully deleted
+      } else {
+        // Rollback
+        post.comments.insert(index, removedComment);
+        post.commentCount.value++;
+        post.comments.refresh();
+      }
+    } catch (e) {
+      debugPrint('Error deleting comment: $e');
+      // Rollback
+      post.comments.insert(index, removedComment);
+      post.commentCount.value++;
+      post.comments.refresh();
+    }
+  }
+
+  Future<bool> reportComment(
+    CommentModel comment, {
+    required String reason,
+    required String description,
+  }) async {
+    if (comment.id == null) return false;
+
+    try {
+      final response = await _apiService.post(
+        ApiEndpoints.reportComment(comment.id),
+        data: {
+          'reason': reason.trim(),
+          'description': description.trim(),
+        },
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error reporting comment: $e');
+    }
+    return false;
   }
 
   Future<void> sharePost(FeedPostModel post) async {
@@ -673,17 +1014,6 @@ class UserHomeController extends GetxController {
     } catch (e) {
       debugPrint('Error recording post share: $e');
     }
-  }
-
-  Future<void> shareExternally() async {
-    // ignore: deprecated_member_use
-    await Share.share('Check out this nightlife post on Lively!');
-  }
-
-  void shareInApp(String userName) {
-    Get.back();
-
-    Get.snackbar('Shared', 'Post shared with $userName');
   }
 
   @override

@@ -18,6 +18,7 @@ class FeedPostModel {
   RxBool isSaved;
   RxBool isFollowing;
   RxBool showComments;
+  RxBool isPostingComment;
 
   RxInt likeCount;
   RxInt commentCount;
@@ -42,14 +43,16 @@ class FeedPostModel {
     required int shareCount,
     required List<CommentModel> comments,
     this.images,
-  })  : isLiked = isLiked.obs,
-        isSaved = isSaved.obs,
-        isFollowing = isFollowing.obs,
-        showComments = false.obs,
-        likeCount = likeCount.obs,
-        commentCount = commentCount.obs,
-        shareCount = shareCount.obs,
-        comments = comments.obs;
+    bool isPostingComment = false,
+  }) : isLiked = isLiked.obs,
+       isSaved = isSaved.obs,
+       isFollowing = isFollowing.obs,
+       showComments = false.obs,
+       isPostingComment = isPostingComment.obs,
+       likeCount = likeCount.obs,
+       commentCount = commentCount.obs,
+       shareCount = shareCount.obs,
+       comments = comments.obs;
 
   factory FeedPostModel.fromJson(Map<String, dynamic> json) {
     final id = json['id']?.toString() ?? '';
@@ -61,10 +64,11 @@ class FeedPostModel {
     if (tagsList is List) {
       hashtags = tagsList
           .where((t) => t != null && t.toString().trim().isNotEmpty)
-          .map((t) =>
-              t.toString().trim().startsWith('#')
-                  ? t.toString().trim()
-                  : '#${t.toString().trim()}')
+          .map(
+            (t) => t.toString().trim().startsWith('#')
+                ? t.toString().trim()
+                : '#${t.toString().trim()}',
+          )
           .join(' ');
     }
 
@@ -122,8 +126,9 @@ class FeedPostModel {
       }
     }
 
-    final postImage =
-        mediaUrls.isNotEmpty ? mediaUrls.first : ImagePath.feedImage;
+    final postImage = mediaUrls.isNotEmpty
+        ? mediaUrls.first
+        : ImagePath.feedImage;
 
     // Counts
     final likesCount = json['likes_count'] is int
@@ -141,7 +146,7 @@ class FeedPostModel {
     final isSaved = json['is_saved'] == true;
     final isFollowing = json['is_following_venue'] == true;
 
-    // Recent comments
+    // Recent comments (chronologically: oldest first, newest at the bottom)
     final List<CommentModel> comments = [];
     if (json['recent_comments'] is List) {
       for (final c in (json['recent_comments'] as List)) {
@@ -149,6 +154,12 @@ class FeedPostModel {
           comments.add(CommentModel.fromJson(c));
         }
       }
+      comments.sort((a, b) {
+        if (a.createdAt != null && b.createdAt != null) {
+          return a.createdAt!.compareTo(b.createdAt!);
+        }
+        return 0;
+      });
     }
 
     return FeedPostModel(
@@ -190,11 +201,7 @@ class ForYouResponseModel {
   final String? previous;
   final List<FeedPostModel> results;
 
-  ForYouResponseModel({
-    this.next,
-    this.previous,
-    required this.results,
-  });
+  ForYouResponseModel({this.next, this.previous, required this.results});
 
   factory ForYouResponseModel.fromJson(Map<String, dynamic> json) {
     final resultsList = <FeedPostModel>[];

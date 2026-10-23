@@ -22,4 +22,10 @@ class ApiEndpoints {
   static String postLike(dynamic id) => '/api/social/posts/$id/like/';
   static String postSave(dynamic id) => '/api/social/posts/$id/save_post/';
   static String postShare(dynamic id) => '/api/social/posts/$id/share/';
+  static String postComments(dynamic postPk) =>
+      '/api/social/posts/$postPk/comments/';
+  static String postCommentDetail(dynamic postPk, dynamic commentId) =>
+      '/api/social/posts/$postPk/comments/$commentId/';
+  static String reportComment(dynamic commentId) =>
+      '/api/social/comments/$commentId/report/';
 }
