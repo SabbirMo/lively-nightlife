@@ -619,7 +619,64 @@ class UserHomeController extends GetxController {
     commentController.clear();
   }
 
+  Future<void> sharePost(FeedPostModel post) async {
+    post.shareCount.value++;
+
+    final buffer = StringBuffer();
+    if (post.caption.isNotEmpty) {
+      buffer.writeln(post.caption);
+    }
+    if (post.hashtags.isNotEmpty) {
+      buffer.writeln(post.hashtags);
+    }
+    final details = <String>[];
+    if (post.userName.isNotEmpty) {
+      details.add('by @${post.userName}');
+    }
+    if (post.location.isNotEmpty) {
+      details.add('at ${post.location}');
+    }
+    if (details.isNotEmpty) {
+      buffer.writeln(details.join(' '));
+    }
+    if (post.image.isNotEmpty &&
+        (post.image.startsWith('http://') ||
+            post.image.startsWith('https://'))) {
+      buffer.writeln('\n${post.image}');
+    }
+    buffer.writeln('\nShared via Lively Nightlife');
+
+    // ignore: deprecated_member_use
+    await Share.share(
+      buffer.toString().trim(),
+      subject: post.caption.isNotEmpty
+          ? post.caption
+          : 'Post by @${post.userName} on Lively',
+    );
+
+    try {
+      final response = await _apiService.post(
+        ApiEndpoints.postShare(post.id),
+        requireAuth: true,
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data;
+        if (data != null && data is Map<String, dynamic>) {
+          if (data.containsKey('shares_count') && data['shares_count'] is int) {
+            post.shareCount.value = data['shares_count'] as int;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error recording post share: $e');
+    }
+  }
+
   Future<void> shareExternally() async {
+    // ignore: deprecated_member_use
     await Share.share('Check out this nightlife post on Lively!');
   }
 
