@@ -41,7 +41,7 @@ class UserEventListCard extends StatelessWidget {
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => fallback,
       );
-    } else {
+    } else if (event.image.isNotEmpty) {
       imageWidget = Image.file(
         File(event.image),
         width: 80.w,
@@ -49,6 +49,8 @@ class UserEventListCard extends StatelessWidget {
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => fallback,
       );
+    } else {
+      imageWidget = fallback;
     }
 
     return GestureDetector(
@@ -150,7 +152,11 @@ class UserEventListCard extends StatelessWidget {
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: Row(
-                              children: event.categories.take(2).map((cat) {
+                              children: (event.tags.isNotEmpty
+                                      ? event.tags
+                                      : event.categories)
+                                  .take(2)
+                                  .map((cat) {
                                 return Container(
                                   margin: EdgeInsets.only(right: 6.w),
                                   padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),

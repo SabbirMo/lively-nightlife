@@ -7,7 +7,7 @@ import 'package:lively_nightlife_nightclub_party/core/common/widgets/text_proper
 import 'package:lively_nightlife_nightclub_party/core/utils/constants/colors.dart';
 import 'package:lively_nightlife_nightclub_party/core/utils/constants/icon_path.dart';
 import 'package:lively_nightlife_nightclub_party/core/common/widgets/custom_button.dart';
-import 'package:lively_nightlife_nightclub_party/routes/app_routes.dart';
+import 'package:lively_nightlife_nightclub_party/features/role/user/user_home_view/widget/home_header_widget.dart';
 import '../controller/user_event_controller.dart';
 import '../model/user_event_model.dart';
 import '../widget/user_event_artist_capsule.dart';
@@ -54,7 +54,7 @@ class UserEventDetailsView extends StatelessWidget {
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => fallback,
       );
-    } else {
+    } else if (event.image.isNotEmpty) {
       imageWidget = Image.file(
         File(event.image),
         width: double.infinity,
@@ -62,6 +62,8 @@ class UserEventDetailsView extends StatelessWidget {
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => fallback,
       );
+    } else {
+      imageWidget = fallback;
     }
 
     return Scaffold(
@@ -93,27 +95,35 @@ class UserEventDetailsView extends StatelessWidget {
                       bottom: 16.h,
                       left: 16.w,
                       right: 16.w,
-                      child: Wrap(
-                        spacing: 8.w,
-                        runSpacing: 8.h,
-                        children: event.categories.map((cat) {
-                          return Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12.w,
-                              vertical: 6.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(100.r),
-                            ),
-                            child: TextProperty(
-                              text: '#$cat',
-                              textColor: AppColors.whiteColor,
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
+                      child: Builder(
+                        builder: (context) {
+                          final tagsList = event.tags.isNotEmpty
+                              ? event.tags
+                              : event.categories;
+                          return Wrap(
+                            spacing: 8.w,
+                            runSpacing: 8.h,
+                            children: tagsList.map((tag) {
+                              final text = tag.startsWith('#') ? tag : '#$tag';
+                              return Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 6.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.35),
+                                  borderRadius: BorderRadius.circular(100.r),
+                                ),
+                                child: TextProperty(
+                                  text: text,
+                                  textColor: AppColors.whiteColor,
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              );
+                            }).toList(),
                           );
-                        }).toList(),
+                        },
                       ),
                     ),
                   ],
@@ -268,14 +278,18 @@ class UserEventDetailsView extends StatelessWidget {
                           Expanded(
                             child: UserEventInfoCard(
                               title: 'Dress Code',
-                              value: 'Upscale Nightclub',
+                              value: event.dressCode.isNotEmpty
+                                  ? event.dressCode
+                                  : 'Upscale Nightclub',
                             ),
                           ),
                           SizedBox(width: 12.w),
                           Expanded(
                             child: UserEventInfoCard(
                               title: 'Age Restriction',
-                              value: '21+',
+                              value: event.ageRestriction.isNotEmpty
+                                  ? event.ageRestriction
+                                  : '21+',
                             ),
                           ),
                         ],
@@ -299,76 +313,9 @@ class UserEventDetailsView extends StatelessWidget {
             top: 40.h,
             left: 16.w,
             right: 16.w,
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Get.back(),
-                  child: Row(
-                    children: [
-                      SvgPicture.asset(
-                        IconPath.backButton,
-                        colorFilter: ColorFilter.mode(
-                          AppColors.whiteColor,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      TextProperty(
-                        text: 'lively',
-                        textColor: AppColors.whiteColor,
-                        fontFamily: 'Sora',
-                        fontSize: 22.sp,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                // Bell & Avatar
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    SvgPicture.asset(
-                      IconPath.notificationBellIcon,
-                      width: 24.w,
-                      height: 24.h,
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.whiteColor,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                    Positioned(
-                      right: -2,
-                      top: -2,
-                      child: Container(
-                        width: 16.w,
-                        height: 16.h,
-                        decoration: const BoxDecoration(
-                          color: AppColors.redColor,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: TextProperty(
-                          text: '4',
-                          textColor: AppColors.whiteColor,
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(width: 16.w),
-                GestureDetector(
-                  onTap: () => Get.toNamed(AppRoute.userProfileView),
-                  child: CircleAvatar(
-                    radius: 18.r,
-                    backgroundImage: const NetworkImage(
-                      'https://i.pravatar.cc/150?img=10',
-                    ),
-                  ),
-                ),
-              ],
+            child: const HomeHeaderWidget(
+              showBackButton: true,
+              color: AppColors.whiteColor,
             ),
           ),
         ],

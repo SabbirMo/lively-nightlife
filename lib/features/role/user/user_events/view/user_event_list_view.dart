@@ -15,6 +15,19 @@ import 'package:lively_nightlife_nightclub_party/features/role/user/user_home_vi
 class UserEventListView extends GetView<UserEventController> {
   const UserEventListView({super.key});
 
+  ImageProvider _getEventImageProvider(String image) {
+    if (image.startsWith('http')) {
+      return NetworkImage(image);
+    } else if (image.startsWith('assets/')) {
+      return AssetImage(image);
+    } else if (image.isNotEmpty) {
+      try {
+        return FileImage(File(image));
+      } catch (_) {}
+    }
+    return const AssetImage(ImagePath.clubCoverPhoto);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(UserEventController());
@@ -31,306 +44,342 @@ class UserEventListView extends GetView<UserEventController> {
           ),
 
           SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header Row (lively, Bell notification, Profile image)
-                  const HomeHeaderWidget(),
-                  SizedBox(height: 20.h),
+            child: RefreshIndicator(
+              color: AppColors.blueColor,
+              onRefresh: () => controller.fetchEvents(isRefresh: true),
+              child: SingleChildScrollView(
+                controller: controller.scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Row (lively, Bell notification, Profile image)
+                    const HomeHeaderWidget(),
+                    SizedBox(height: 20.h),
 
-                  // Search Bar & Filter Row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 48.h,
+                    // Search Bar & Filter Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 48.h,
+                            decoration: BoxDecoration(
+                              color: AppColors.grey50Color,
+                              borderRadius: BorderRadius.circular(24.r),
+                            ),
+                            child: CustomTextfield(
+                              borderRadius: 100.r,
+                              borderColor: AppColors.lightGreyColor.withValues(
+                                alpha: 0.2,
+                              ),
+                              controller: controller.searchController,
+                              prefixIcon: IconPath.searchIcon,
+                              fillColor: AppColors.lightGreyColor2,
+                              fieldText: 'Search clubs, people...',
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        // Filter Button
+                        Container(
+                          padding: EdgeInsets.all(14.sp),
                           decoration: BoxDecoration(
-                            color: AppColors.grey50Color,
-                            borderRadius: BorderRadius.circular(24.r),
-                          ),
-                          child: CustomTextfield(
-                            borderRadius: 100.r,
-                            borderColor: AppColors.lightGreyColor.withValues(
-                              alpha: 0.2,
-                            ),
-                            controller: controller.searchController,
-                            prefixIcon: IconPath.searchIcon,
-                            fillColor: AppColors.lightGreyColor2,
-                            fieldText: 'Search clubs, people...',
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      // Filter Button
-                      Container(
-                        padding: EdgeInsets.all(14.sp),
-                        decoration: BoxDecoration(
-                          color: AppColors.lightGreyColor2,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.lightGreyColor.withValues(
-                              alpha: 0.2,
-                            ),
-                          ),
-                        ),
-                        child: GestureDetector(
-                          onTap: () {},
-                          child: SvgPicture.asset(
-                            IconPath.filterIcon,
-                            width: 20.w,
-                            height: 20.h,
-                            colorFilter: const ColorFilter.mode(
-                              AppColors.blackColor,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
-
-                  // Tab Filter Chips
-                  SizedBox(
-                    height: 42.h,
-                    child: Obx(() {
-                      final tabs = ['All', 'Tonight', 'This Week', 'Weekend'];
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: tabs.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final tabName = entry.value;
-                            final isSelected =
-                                controller.selectedTab.value == index;
-                            return GestureDetector(
-                              onTap: () => controller.selectTab(index),
-                              child: Container(
-                                margin: EdgeInsets.only(right: 10.w),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 18.w,
-                                  vertical: 8.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors.blueColor
-                                      : AppColors.lightGreyColor2,
-                                  borderRadius: BorderRadius.circular(20.r),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? Colors.transparent
-                                        : AppColors.lightGreyColor2,
-                                    width: 1.w,
-                                  ),
-                                ),
-                                child: TextProperty(
-                                  text: tabName,
-                                  textColor: isSelected
-                                      ? AppColors.whiteColor
-                                      : AppColors.secondBlackColor,
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            color: AppColors.lightGreyColor2,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.lightGreyColor.withValues(
+                                alpha: 0.2,
                               ),
-                            );
-                          }).toList(),
-                        ),
-                      );
-                    }),
-                  ),
-                  SizedBox(height: 24.h),
-
-                  // Hot Event Card
-                  Obx(() {
-                    final query = controller.searchQuery.value;
-                    if (query.isEmpty &&
-                        (controller.selectedTab.value == 0 ||
-                            controller.selectedTab.value == 3)) {
-                      final hotEvents = controller.eventsList
-                          .where((e) => e.isHot)
-                          .toList();
-                      if (hotEvents.isNotEmpty) {
-                        final hotEvent = hotEvents.first;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            GestureDetector(
-                              onTap: () => Get.toNamed(
-                                '/userEventDetailsView',
-                                arguments: hotEvent,
+                            ),
+                          ),
+                          child: GestureDetector(
+                            onTap: () {},
+                            child: SvgPicture.asset(
+                              IconPath.filterIcon,
+                              width: 20.w,
+                              height: 20.h,
+                              colorFilter: const ColorFilter.mode(
+                                AppColors.blackColor,
+                                BlendMode.srcIn,
                               ),
-                              child: Container(
-                                width: double.infinity,
-                                height: 200.h,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(24.r),
-                                  image: DecorationImage(
-                                    image: hotEvent.image.startsWith('http')
-                                        ? NetworkImage(hotEvent.image)
-                                        : (hotEvent.image.startsWith('assets/')
-                                              ? AssetImage(hotEvent.image)
-                                              : FileImage(File(hotEvent.image))
-                                                    as ImageProvider),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20.h),
+
+                    // Tab Filter Chips
+                    SizedBox(
+                      height: 42.h,
+                      child: Obx(() {
+                        final tabs = ['All', 'Tonight', 'This Week', 'Weekend'];
+                        return SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: tabs.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final tabName = entry.value;
+                              final isSelected =
+                                  controller.selectedTab.value == index;
+                              return GestureDetector(
+                                onTap: () => controller.selectTab(index),
                                 child: Container(
+                                  margin: EdgeInsets.only(right: 10.w),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 18.w,
+                                    vertical: 8.h,
+                                  ),
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(24.r),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.black.withValues(alpha: 0.8),
-                                        Colors.transparent,
-                                      ],
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
+                                    color: isSelected
+                                        ? AppColors.blueColor
+                                        : AppColors.lightGreyColor2,
+                                    borderRadius: BorderRadius.circular(20.r),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Colors.transparent
+                                          : AppColors.lightGreyColor2,
+                                      width: 1.w,
                                     ),
                                   ),
-                                  padding: EdgeInsets.all(16.r),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      // Top-left: HOT EVENT gradient tag
-                                      Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10.w,
-                                          vertical: 6.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              AppColors.gradientStartColor,
-                                              AppColors.gradientEndColor,
+                                  child: TextProperty(
+                                    text: tabName,
+                                    textColor: isSelected
+                                        ? AppColors.whiteColor
+                                        : AppColors.secondBlackColor,
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        );
+                      }),
+                    ),
+                    SizedBox(height: 24.h),
+
+                    // Hot Event Card
+                    Obx(() {
+                      final query = controller.searchQuery.value;
+                      if (query.isEmpty &&
+                          (controller.selectedTab.value == 0 ||
+                              controller.selectedTab.value == 3)) {
+                        final hotEvents = controller.eventsList
+                            .where((e) => e.isHot)
+                            .toList();
+                        if (hotEvents.isNotEmpty) {
+                          final hotEvent = hotEvents.first;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                onTap: () => Get.toNamed(
+                                  '/userEventDetailsView',
+                                  arguments: hotEvent,
+                                ),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 200.h,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(24.r),
+                                    image: DecorationImage(
+                                      image: _getEventImageProvider(
+                                        hotEvent.image,
+                                      ),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(24.r),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.black.withValues(alpha: 0.8),
+                                          Colors.transparent,
+                                        ],
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                      ),
+                                    ),
+                                    padding: EdgeInsets.all(16.r),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // Top-left: HOT EVENT gradient tag
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10.w,
+                                            vertical: 6.h,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                AppColors.gradientStartColor,
+                                                AppColors.gradientEndColor,
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              100.r,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              TextProperty(
+                                                text: '🔥 HOT EVENT',
+                                                textColor: AppColors.whiteColor,
+                                                fontSize: 9.sp,
+                                                fontWeight: FontWeight.w800,
+                                              ),
                                             ],
                                           ),
-                                          borderRadius: BorderRadius.circular(
-                                            100.r,
-                                          ),
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
+
+                                        // Bottom Title and Info
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             TextProperty(
-                                              text: '🔥 HOT EVENT',
+                                              text: hotEvent.name,
                                               textColor: AppColors.whiteColor,
-                                              fontSize: 9.sp,
-                                              fontWeight: FontWeight.w800,
+                                              fontSize: 18.sp,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            SizedBox(height: 8.h),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons
+                                                          .calendar_today_outlined,
+                                                      size: 12.sp,
+                                                      color: AppColors
+                                                          .whiteColor
+                                                          .withValues(
+                                                            alpha: 0.8,
+                                                          ),
+                                                    ),
+                                                    SizedBox(width: 6.w),
+                                                    TextProperty(
+                                                      text:
+                                                          '${hotEvent.date} · ${hotEvent.time}',
+                                                      textColor: AppColors
+                                                          .whiteColor
+                                                          .withValues(
+                                                            alpha: 0.8,
+                                                          ),
+                                                      fontSize: 11.sp,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                    ),
+                                                  ],
+                                                ),
+                                                TextProperty(
+                                                  text:
+                                                      'From \$${hotEvent.price}',
+                                                  textColor:
+                                                      AppColors.whiteColor,
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
-                                      ),
-
-                                      // Bottom Title and Info
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          TextProperty(
-                                            text: hotEvent.name,
-                                            textColor: AppColors.whiteColor,
-                                            fontSize: 18.sp,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                          SizedBox(height: 8.h),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons
-                                                        .calendar_today_outlined,
-                                                    size: 12.sp,
-                                                    color: AppColors.whiteColor
-                                                        .withValues(alpha: 0.8),
-                                                  ),
-                                                  SizedBox(width: 6.w),
-                                                  TextProperty(
-                                                    text:
-                                                        '${hotEvent.date} · ${hotEvent.time}',
-                                                    textColor: AppColors
-                                                        .whiteColor
-                                                        .withValues(alpha: 0.8),
-                                                    fontSize: 11.sp,
-                                                    fontWeight: FontWeight.w400,
-                                                  ),
-                                                ],
-                                              ),
-                                              TextProperty(
-                                                text:
-                                                    'From \$${hotEvent.price}',
-                                                textColor: AppColors.whiteColor,
-                                                fontSize: 14.sp,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
+                              SizedBox(height: 24.h),
+                            ],
+                          );
+                        }
+                      }
+                      return const SizedBox.shrink();
+                    }),
+
+                    // Upcoming Events Title
+                    TextProperty(
+                      text: 'Upcoming Events',
+                      textColor: AppColors.blackColor,
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    SizedBox(height: 14.h),
+
+                    // Events list
+                    Obx(() {
+                      if (controller.isLoading.value &&
+                          controller.eventsList.isEmpty) {
+                        return SizedBox(
+                          height: 250.h,
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.blueColor,
                             ),
-                            SizedBox(height: 24.h),
-                          ],
+                          ),
                         );
                       }
-                    }
-                    return const SizedBox.shrink();
-                  }),
 
-                  // Upcoming Events Title
-                  TextProperty(
-                    text: 'Upcoming Events',
-                    textColor: AppColors.blackColor,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  SizedBox(height: 14.h),
-
-                  // Events list
-                  Obx(() {
-                    if (controller.filteredEvents.isEmpty) {
-                      return SizedBox(
-                        height: 200.h,
-                        child: Center(
-                          child: TextProperty(
-                            text: 'No events found.',
-                            textColor: AppColors.greyColor,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }
-
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      padding: EdgeInsets.only(bottom: 100.h),
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: controller.filteredEvents.length,
-                      separatorBuilder: (context, index) =>
-                          SizedBox(height: 14.h),
-                      itemBuilder: (context, index) {
-                        final event = controller.filteredEvents[index];
-                        return UserEventListCard(
-                          event: event,
-                          onTap: () => Get.toNamed(
-                            '/userEventDetailsView',
-                            arguments: event,
+                      if (controller.filteredEvents.isEmpty) {
+                        return SizedBox(
+                          height: 200.h,
+                          child: Center(
+                            child: TextProperty(
+                              text: 'No events found.',
+                              textColor: AppColors.greyColor,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         );
-                      },
-                    );
-                  }),
-                ],
+                      }
+
+                      return Column(
+                        children: [
+                          ListView.separated(
+                            shrinkWrap: true,
+                            padding: EdgeInsets.zero,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: controller.filteredEvents.length,
+                            separatorBuilder: (context, index) =>
+                                SizedBox(height: 14.h),
+                            itemBuilder: (context, index) {
+                              final event = controller.filteredEvents[index];
+                              return UserEventListCard(
+                                event: event,
+                                onTap: () => Get.toNamed(
+                                  '/userEventDetailsView',
+                                  arguments: event,
+                                ),
+                              );
+                            },
+                          ),
+                          if (controller.isLoadingMore.value) ...[
+                            SizedBox(height: 16.h),
+                            const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.blueColor,
+                              ),
+                            ),
+                          ],
+                          SizedBox(height: 100.h),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
               ),
             ),
           ),

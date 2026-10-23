@@ -28,4 +28,7 @@ class ApiEndpoints {
       '/api/social/posts/$postPk/comments/$commentId/';
   static String reportComment(dynamic commentId) =>
       '/api/social/comments/$commentId/report/';
+
+  // Events Endpoints
+  static const String events = '/api/events/';
 }

@@ -31,7 +31,23 @@ class UserEventArtistCapsule extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 24.r,
-            backgroundImage: NetworkImage(artist.image),
+            backgroundColor: AppColors.grey50Color,
+            backgroundImage: (artist.image.isNotEmpty &&
+                    artist.image.startsWith('http'))
+                ? NetworkImage(artist.image)
+                : (artist.image.isNotEmpty &&
+                        artist.image.startsWith('assets/'))
+                    ? AssetImage(artist.image)
+                    : null,
+            child: (artist.image.isEmpty ||
+                    (!artist.image.startsWith('http') &&
+                        !artist.image.startsWith('assets/')))
+                ? Icon(
+                    Icons.person,
+                    color: AppColors.greyColor,
+                    size: 24.sp,
+                  )
+                : null,
           ),
           SizedBox(width: 14.w),
           Expanded(

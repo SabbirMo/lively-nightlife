@@ -11,11 +11,13 @@ import 'package:lively_nightlife_nightclub_party/routes/app_routes.dart';
 class HomeHeaderWidget extends StatelessWidget {
   final bool showBackButton;
   final VoidCallback? onBackTap;
+  final Color? color;
 
   const HomeHeaderWidget({
     super.key,
     this.showBackButton = false,
     this.onBackTap,
+    this.color,
   });
 
   @override
@@ -23,6 +25,7 @@ class HomeHeaderWidget extends StatelessWidget {
     final controller = Get.isRegistered<UserHomeController>()
         ? Get.find<UserHomeController>()
         : Get.put(UserHomeController());
+    final effectiveColor = color ?? AppColors.secondBlackColor;
 
     return Row(
       children: [
@@ -33,8 +36,8 @@ class HomeHeaderWidget extends StatelessWidget {
               IconPath.backButton,
               width: 16.w,
               height: 16.h,
-              colorFilter: const ColorFilter.mode(
-                AppColors.secondBlackColor,
+              colorFilter: ColorFilter.mode(
+                effectiveColor,
                 BlendMode.srcIn,
               ),
             ),
@@ -44,7 +47,7 @@ class HomeHeaderWidget extends StatelessWidget {
 
         TextProperty(
           text: 'Lively',
-          textColor: AppColors.secondBlackColor,
+          textColor: effectiveColor,
           fontFamily: 'Sora',
           fontSize: 24.sp,
           fontWeight: FontWeight.w700,
@@ -63,6 +66,12 @@ class HomeHeaderWidget extends StatelessWidget {
                 IconPath.notificationBellIcon,
                 width: 24.w,
                 height: 24.h,
+                colorFilter: color != null
+                    ? ColorFilter.mode(
+                        color!,
+                        BlendMode.srcIn,
+                      )
+                    : null,
               ),
             ),
 
@@ -100,7 +109,9 @@ class HomeHeaderWidget extends StatelessWidget {
             height: 38.h,
             padding: EdgeInsets.all(2.w),
             decoration: BoxDecoration(
-              color: AppColors.blueColor.withValues(alpha: 0.5),
+              color: color == AppColors.whiteColor
+                  ? Colors.white.withValues(alpha: 0.3)
+                  : AppColors.blueColor.withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
             child: ClipOval(
