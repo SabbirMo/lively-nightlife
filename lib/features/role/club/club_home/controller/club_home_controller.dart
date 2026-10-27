@@ -140,7 +140,9 @@ class ClubHomeController extends GetxController {
   }
 
   Future<void> shareExternally(FeedPostModel post) async {
-    await Share.share('Check out this nightlife post on Lively!');
+    await SharePlus.instance.share(
+      ShareParams(text: 'Check out this nightlife post on Lively!'),
+    );
     post.shareCount.value++;
   }
 

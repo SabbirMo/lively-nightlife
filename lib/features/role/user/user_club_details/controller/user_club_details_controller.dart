@@ -45,8 +45,10 @@ class UserClubDetailsController extends GetxController {
   }
 
   Future<void> shareExternally() async {
-    await Share.share(
-      'Check out ${club.name} on Lively! Location: ${club.location}',
+    await SharePlus.instance.share(
+      ShareParams(
+        text: 'Check out ${club.name} on Lively! Location: ${club.location}',
+      ),
     );
   }
 

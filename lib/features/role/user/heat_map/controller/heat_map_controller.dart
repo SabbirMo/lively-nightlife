@@ -159,10 +159,10 @@ class HeatMapController extends GetxController {
 
 
   Future<void> shareExternally() async {
-  await Share.share(
-    'Check out this nightlife post on Lively!',
-  );
-}
+    await SharePlus.instance.share(
+      ShareParams(text: 'Check out this nightlife post on Lively!'),
+    );
+  }
 
 void shareInApp(String userName) {
   Get.back();

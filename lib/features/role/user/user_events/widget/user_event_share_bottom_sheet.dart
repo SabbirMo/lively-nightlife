@@ -152,8 +152,11 @@ class _UserEventShareBottomSheetState extends State<UserEventShareBottomSheet> {
                 child: GestureDetector(
                   onTap: () {
                     Get.back();
-                    Share.share(
-                      'Check out "${widget.event.name}" at ${widget.event.location} on ${widget.event.date}!',
+                    SharePlus.instance.share(
+                      ShareParams(
+                        text:
+                            'Check out "${widget.event.name}" at ${widget.event.location} on ${widget.event.date}!',
+                      ),
                     );
                   },
                   child: Container(

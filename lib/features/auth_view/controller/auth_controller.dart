@@ -40,7 +40,9 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    isLoading.value = false;
     _loadSavedCredentials();
+    _loadPassedArguments();
   }
 
   void _loadSavedCredentials() {
@@ -52,6 +54,24 @@ class AuthController extends GetxController {
         final savedEmail = storage.read<String>(_savedEmailKey);
         if (savedEmail != null && savedEmail.isNotEmpty) {
           emailController.text = savedEmail;
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _loadPassedArguments() {
+    try {
+      final args = Get.arguments;
+      if (args is Map) {
+        final passedEmail = args['email']?.toString();
+        if (passedEmail != null && passedEmail.isNotEmpty) {
+          emailController.text = passedEmail;
+        }
+        final passedRole = args['role']?.toString();
+        if (passedRole == 'club' || passedRole == 'venue') {
+          selectedRole.value = AuthRole.club;
+        } else if (passedRole == 'user') {
+          selectedRole.value = AuthRole.user;
         }
       }
     } catch (_) {}
@@ -134,12 +154,6 @@ class AuthController extends GetxController {
           await storage.remove(_savedEmailKey);
         }
 
-        Get.snackbar(
-          'Success',
-          'Logged in successfully!',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-
         // Check user role from response or decoded JWT payload or selectedRole
         String? activeProfile;
         if (data is Map<String, dynamic>) {
@@ -169,15 +183,21 @@ class AuthController extends GetxController {
           selectedRole.value = AuthRole.user;
           Get.offAllNamed(AppRoute.userBottomNavigationBarView);
         }
+      } else {
+        isLoading.value = false;
+        Get.snackbar(
+          'Login Failed',
+          response.statusMessage ?? 'Failed to log in',
+          snackPosition: SnackPosition.BOTTOM,
+        );
       }
     } catch (e) {
+      isLoading.value = false;
       Get.snackbar(
         'Login Failed',
         e.toString(),
         snackPosition: SnackPosition.BOTTOM,
       );
-    } finally {
-      isLoading.value = false;
     }
   }
 
@@ -337,6 +357,7 @@ class AuthController extends GetxController {
     signupEmailController.clear();
     signupPasswordController.clear();
     confirmPasswordController.clear();
+    isLoading.value = false;
 
     super.onClose();
   }

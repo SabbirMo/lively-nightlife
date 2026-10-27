@@ -147,6 +147,7 @@ class LoginView extends GetView<AuthController> {
 
                   Obx(
                     () => CustomButton(
+                      buttonWidth: double.infinity,
                       borderRadius: BorderRadius.circular(100.r),
                       isLoading: controller.isLoading.value,
                       text: 'Log In',

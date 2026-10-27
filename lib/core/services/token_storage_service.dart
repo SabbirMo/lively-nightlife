@@ -169,13 +169,25 @@ class TokenStorageService {
     }
   }
 
+  static bool _isLoggingOut = false;
+  static bool get isLoggingOut => _isLoggingOut;
+
   /// Complete logout helper: clears all tokens, resets DioClient, clears memory and navigates to login
   static Future<void> logout() async {
-    await clearTokens();
-    DioClient.reset();
+    if (_isLoggingOut) return;
+    _isLoggingOut = true;
+
     try {
-      Get.deleteAll(force: true);
-    } catch (_) {}
-    Get.offAllNamed(AppRoute.loginView);
+      await clearTokens();
+      DioClient.reset();
+
+      if (Get.currentRoute != AppRoute.loginView) {
+        Get.offAllNamed(AppRoute.loginView);
+      }
+    } finally {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _isLoggingOut = false;
+      });
+    }
   }
 }

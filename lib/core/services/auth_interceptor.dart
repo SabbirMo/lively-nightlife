@@ -56,7 +56,10 @@ class AuthInterceptor extends Interceptor {
         // Refresh failed, logout user
         log('Token refresh failed, clearing tokens');
         await TokenStorageService.clearTokens();
-        Get.offAllNamed(AppRoute.loginView);
+        if (!TokenStorageService.isLoggingOut &&
+            Get.currentRoute != AppRoute.loginView) {
+          Get.offAllNamed(AppRoute.loginView);
+        }
         return handler.next(err);
       }
     }

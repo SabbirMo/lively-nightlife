@@ -46,7 +46,7 @@ dependencies:
   firebase_core: ^2.24.0
   firebase_auth: ^4.15.0
   image_picker: ^1.0.7
-  file_picker: ^8.0.0+1
+  file_picker: ^13.3.0
   google_sign_in: ^6.1.5
   shared_preferences: ^2.3.2
   flutter_otp_text_field: ^1.5.1+1
@@ -55,7 +55,7 @@ dependencies:
   dotted_border: ^3.1.0
   video_player: ^2.8.1
   visibility_detector: ^0.4.0+2
-  share_plus: ^12.0.2
+  share_plus: ^13.3.1
   flutter_svg: ^2.2.0
   flutter_holo_date_picker: ^2.0.0
   google_maps_flutter: ^2.17.1

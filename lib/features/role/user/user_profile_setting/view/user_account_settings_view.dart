@@ -11,6 +11,10 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.isRegistered<UserProfileSettingController>()
+        ? Get.find<UserProfileSettingController>()
+        : Get.put(UserProfileSettingController());
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -49,7 +53,7 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
                       GestureDetector(
                         onTap: () => Get.back(),
                         child: Icon(
-                          Icons.arrow_back_ios_new,
+                           Icons.arrow_back_ios_new,
                           size: 22.sp,
                           color: AppColors.blackColor,
                         ),
@@ -92,17 +96,20 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
                               ),
                             ],
                           ),
-                          child: Obx(
-                            () => Column(
+                          child: Obx(() {
+                            final profile = controller.userProfile.value;
+                            final email = profile?.email ?? controller.email;
+                            final purchaseHistory = controller.purchaseHistory;
+
+                            return Column(
                               children: [
                                 // Change Email
                                 _buildDetailTile(
                                   label: 'Change Email',
-                                  value: controller.email.isNotEmpty
-                                      ? controller.email
-                                      : 'No email',
-                                  onTap: () {
-                                    Get.toNamed(AppRoute.changeEmailView);
+                                  value: email.isNotEmpty ? email : 'No email',
+                                  onTap: () async {
+                                    await Get.toNamed(AppRoute.changeEmailView);
+                                    controller.fetchUserProfile();
                                   },
                                 ),
                                 _buildDivider(),
@@ -118,7 +125,7 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
                                 // Purchase History
                                 _buildDetailTile(
                                   label: 'Purchase History',
-                                  value: controller.purchaseHistory,
+                                  value: purchaseHistory,
                                   onTap: () {
                                     Get.snackbar(
                                       'Purchase History',
@@ -127,8 +134,8 @@ class UserAccountSettingsView extends GetView<UserProfileSettingController> {
                                   },
                                 ),
                               ],
-                            ),
-                          ),
+                            );
+                          }),
                         ),
                       ],
                     ),

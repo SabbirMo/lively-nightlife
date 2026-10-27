@@ -122,8 +122,10 @@ class UserOtherProfileController extends GetxController {
   }
 
   Future<void> shareExternally() async {
-    await Share.share(
-      'Check out ${user.name} (@${user.username})\'s profile on Lively!',
+    await SharePlus.instance.share(
+      ShareParams(
+        text: 'Check out ${user.name} (@${user.username})\'s profile on Lively!',
+      ),
     );
   }
 

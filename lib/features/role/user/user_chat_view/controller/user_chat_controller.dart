@@ -184,14 +184,15 @@ class UserChatController extends GetxController {
 
   Future<void> pickFileAttachment({bool sentByClub = false}) async {
     try {
-      final result = await FilePicker.platform.pickFiles();
-      if (result != null && result.files.single.path != null) {
-        final platformFile = result.files.single;
+      final platformFile = await FilePicker.pickFile();
+      if (platformFile != null && platformFile.path != null) {
+        final sizeInBytes =
+            platformFile.lengthSync() ?? (await platformFile.length()) ?? 0;
         sendAttachmentMessage(
-          filePath: platformFile.path,
+          filePath: platformFile.path!,
           fileName: platformFile.name,
           fileSize:
-              '${(platformFile.size / (1024 * 1024)).toStringAsFixed(1)} MB',
+              '${(sizeInBytes / (1024 * 1024)).toStringAsFixed(1)} MB',
           sentByClub: sentByClub,
         );
       }

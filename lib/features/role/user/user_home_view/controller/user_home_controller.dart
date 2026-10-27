@@ -987,12 +987,13 @@ class UserHomeController extends GetxController {
     }
     buffer.writeln('\nShared via Lively Nightlife');
 
-    // ignore: deprecated_member_use
-    await Share.share(
-      buffer.toString().trim(),
-      subject: post.caption.isNotEmpty
-          ? post.caption
-          : 'Post by @${post.userName} on Lively',
+    await SharePlus.instance.share(
+      ShareParams(
+        text: buffer.toString().trim(),
+        subject: post.caption.isNotEmpty
+            ? post.caption
+            : 'Post by @${post.userName} on Lively',
+      ),
     );
 
     try {
