@@ -77,6 +77,7 @@ class FeedPostCardWidget extends StatelessWidget {
         width: double.infinity,
         height: 0.5.sh,
         fit: BoxFit.cover,
+        cacheWidth: 800,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(

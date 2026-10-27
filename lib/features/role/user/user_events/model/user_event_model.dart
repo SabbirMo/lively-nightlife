@@ -61,7 +61,10 @@ class UserEventModel {
     this.rsvpCount = 0,
   }) : isRsvped = isRsvped.obs;
 
-  factory UserEventModel.fromJson(Map<String, dynamic> json, {bool isHot = false}) {
+  factory UserEventModel.fromJson(
+    Map<String, dynamic> json, {
+    bool isHot = false,
+  }) {
     DateTime? parsedStart;
     if (json['start_time'] != null) {
       parsedStart = DateTime.tryParse(json['start_time'].toString());
@@ -116,8 +119,8 @@ class UserEventModel {
     String parsedLocation = venueName.isNotEmpty
         ? (customAddress.isNotEmpty ? '$venueName, $customAddress' : venueName)
         : (customAddress.isNotEmpty
-            ? customAddress
-            : (json['location']?.toString() ?? ''));
+              ? customAddress
+              : (json['location']?.toString() ?? ''));
 
     int parsedPrice = 0;
     final rawPrice = json['ticket_price'] ?? json['price'];
@@ -174,12 +177,14 @@ class UserEventModel {
     final goingCount = rsvpCount > 0
         ? rsvpCount.toString()
         : (json['goingCount']?.toString() ??
-            json['going_count']?.toString() ??
-            '0');
-    final interestedCount = json['interestedCount']?.toString() ??
+              json['going_count']?.toString() ??
+              '0');
+    final interestedCount =
+        json['interestedCount']?.toString() ??
         json['interested_count']?.toString() ??
         '0';
-    final isUserGoing = json['is_user_going'] == true ||
+    final isUserGoing =
+        json['is_user_going'] == true ||
         json['is_rsvped'] == true ||
         json['isRsvped'] == true;
 

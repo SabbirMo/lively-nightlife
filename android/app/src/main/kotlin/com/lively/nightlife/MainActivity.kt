@@ -1,4 +1,4 @@
-package com.example.lively_nightlife_nightclub_party
+package com.lively.nightlife
 
 import io.flutter.embedding.android.FlutterActivity
 

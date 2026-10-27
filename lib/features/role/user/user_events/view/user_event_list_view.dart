@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:lively_nightlife_nightclub_party/core/common/widgets/custom_textfield.dart';
 import 'package:lively_nightlife_nightclub_party/core/common/widgets/text_property.dart';
@@ -58,55 +57,24 @@ class UserEventListView extends GetView<UserEventController> {
                     const HomeHeaderWidget(),
                     SizedBox(height: 20.h),
 
-                    // Search Bar & Filter Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 48.h,
-                            decoration: BoxDecoration(
-                              color: AppColors.grey50Color,
-                              borderRadius: BorderRadius.circular(24.r),
-                            ),
-                            child: CustomTextfield(
-                              borderRadius: 100.r,
-                              borderColor: AppColors.lightGreyColor.withValues(
-                                alpha: 0.2,
-                              ),
-                              controller: controller.searchController,
-                              prefixIcon: IconPath.searchIcon,
-                              fillColor: AppColors.lightGreyColor2,
-                              fieldText: 'Search clubs, people...',
-                            ),
-                          ),
+                    // Search Bar
+                    Container(
+                      width: double.infinity,
+                      height: 48.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.grey50Color,
+                        borderRadius: BorderRadius.circular(24.r),
+                      ),
+                      child: CustomTextfield(
+                        borderRadius: 100.r,
+                        borderColor: AppColors.lightGreyColor.withValues(
+                          alpha: 0.2,
                         ),
-                        SizedBox(width: 12.w),
-                        // Filter Button
-                        Container(
-                          padding: EdgeInsets.all(14.sp),
-                          decoration: BoxDecoration(
-                            color: AppColors.lightGreyColor2,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColors.lightGreyColor.withValues(
-                                alpha: 0.2,
-                              ),
-                            ),
-                          ),
-                          child: GestureDetector(
-                            onTap: () {},
-                            child: SvgPicture.asset(
-                              IconPath.filterIcon,
-                              width: 20.w,
-                              height: 20.h,
-                              colorFilter: const ColorFilter.mode(
-                                AppColors.blackColor,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                        controller: controller.searchController,
+                        prefixIcon: IconPath.searchIcon,
+                        fillColor: AppColors.lightGreyColor2,
+                        fieldText: 'Search clubs, people...',
+                      ),
                     ),
                     SizedBox(height: 20.h),
 

@@ -31,4 +31,5 @@ class ApiEndpoints {
 
   // Events Endpoints
   static const String events = '/api/events/';
+  static String eventRsvp(dynamic id) => '/api/events/$id/rsvp/';
 }

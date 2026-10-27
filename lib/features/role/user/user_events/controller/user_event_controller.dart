@@ -9,7 +9,8 @@ import '../model/user_lineup_model.dart';
 class UserEventController extends GetxController {
   final ApiService _apiService = ApiService();
 
-  final RxInt selectedTab = 0.obs; // 0: All, 1: Tonight, 2: This Week, 3: Weekend
+  final RxInt selectedTab =
+      0.obs; // 0: All, 1: Tonight, 2: This Week, 3: Weekend
   final searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
 
@@ -131,8 +132,9 @@ class UserEventController extends GetxController {
         try {
           final uri = Uri.parse(_nextUrl!);
           requestPath = uri.path;
-          queryParams =
-              uri.queryParameters.isNotEmpty ? uri.queryParameters : null;
+          queryParams = uri.queryParameters.isNotEmpty
+              ? uri.queryParameters
+              : null;
         } catch (_) {
           requestPath = ApiEndpoints.events;
           queryParams = {'page': _currentPage};
@@ -227,8 +229,9 @@ class UserEventController extends GetxController {
         final matchName = e.name.toLowerCase().contains(query);
         final matchLocation = e.location.toLowerCase().contains(query);
         final matchVenue = e.venueName.toLowerCase().contains(query);
-        final matchCategory =
-            e.categories.any((c) => c.toLowerCase().contains(query));
+        final matchCategory = e.categories.any(
+          (c) => c.toLowerCase().contains(query),
+        );
         final matchTags = e.tags.any((t) => t.toLowerCase().contains(query));
         return matchName ||
             matchLocation ||
@@ -241,12 +244,17 @@ class UserEventController extends GetxController {
     filteredEvents.assignAll(temp);
   }
 
-  void toggleRsvp(UserEventModel event) {
+  Future<void> toggleRsvp(UserEventModel event) async {
     event.isRsvped.toggle();
-    final idx = eventsList.indexWhere((e) => e.id == event.id);
-    if (idx != -1) {
-      eventsList[idx] = event;
-      filterEvents();
+    try {
+      await _apiService.post(
+        ApiEndpoints.eventRsvp(event.id),
+        data: {'is_going': event.isRsvped.value},
+        requireAuth: true,
+      );
+    } catch (e) {
+      debugPrint('Error RSVP: $e');
+      event.isRsvped.toggle();
     }
   }
 
