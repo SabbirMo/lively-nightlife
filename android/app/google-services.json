@@ -12,7 +12,20 @@
           "package_name": "com.lively.nightlife"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "261406915997-3hkj4mrclvh9gmrbpljor9ubkca89sej.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lively.nightlife",
+            "certificate_hash": "33e379648f204c1bae4ef3edf4dc84ed11e807b1"
+          }
+        },
+        {
+          "client_id": "261406915997-srnnuakvdg740bb73fdooopfk6p13j3h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAG076aSl-iuiUJA3SLUcPOXxWQnW0Z924"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "261406915997-srnnuakvdg740bb73fdooopfk6p13j3h.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "261406915997-efd0evkt8u63ub351beceqpq7j1coe8m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.lively.nightlife"
+              }
+            }
+          ]
         }
       }
     }
